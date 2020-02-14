@@ -14,7 +14,7 @@ makeblastdb -in ./Db_build_temp/combined_marked_proteome.faa -parse_seqids -dbty
 
 
 ###### Extract all model ABC sequences into separate family fasta files, align them and then create HMM database
-grep -A 1 -E "__ABC[A-Z]" ./Db_build_temp/combined_marked_proteome.faa | sed '/--/d' > ./Db_build_temp/Only_ABCs.faa
+grep -A 1 -E "__ABC[A-Z]+" ./Db_build_temp/combined_marked_proteome.faa | sed '/--/d' > ./Db_build_temp/Only_ABCs.faa
 /home/pioannidis/Programs/interproscan-5.30-69.0/interproscan.sh -appl pfam -i Db_build_temp/Only_ABCs.faa -o Db_build_temp/IPSCAN -f TSV
 /data2/shane/Applications/custom/ip_domain_extract.py ./Db_build_temp/Only_ABCs.faa ./Db_build_temp/IPSCAN "PF00005" > ./Db_build_temp/Only_ABCs_NBD.faa
 
@@ -24,7 +24,6 @@ hmmbuild ./Db_build_temp/Only_ABCs.hmm ./Db_build_temp/Only_ABCs.trimmed
 
 
 mkdir model_database
-mkdir intermediate
 mkdir ./model_database/HMM_databases
 mkdir ./model_database/marked_proteome
 mkdir ./model_database/model_NBDs
@@ -32,8 +31,6 @@ mkdir ./model_database/model_NBDs
 mv ./Db_build_temp/*.hmm ./model_database/HMM_databases/
 mv ./Db_build_temp/combined_marked_proteome.fa* ./model_database/marked_proteome/
 mv ./Db_build_temp/*NBD* ./model_database/model_NBDs/
-
-mv ./Db_build_temp intermediate
 
 
 #cat ./ABC_REF/Input_files/ABC_families.txt | while read i
