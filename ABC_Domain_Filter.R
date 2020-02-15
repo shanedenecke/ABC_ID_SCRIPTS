@@ -35,17 +35,18 @@ too.long=rbindlist(long.list)
 
 
 domain.annot=function(domain.table,sp){
-  domain.table=ipscan[name %in% too.short$name]
-  domain.table$species=gsub('(^.+)__.+__.+$','\\1',domain.table$name)
-  domain.table$query=gsub('^.+__.+__(.+$)','\\1',domain.table$name)
-  #domain.table[species==sp] 
+  test.table=ipscan[name %in% domain.table$name]
+  test.table$species=gsub('(^.+)__.+__.+$','\\1',test.table$name)
+  test.table$query=gsub('^.+__.+__(.+$)','\\1',test.table$name)
+  #test.table[species==sp] 
   blast=fread(paste0('./ABC_search/',sp,'/total_ABC_recip_blast.tsv')) %>% rename(query=V1,subject=V2,evalue=V4,qlen=V5,sstart=V6,send=V7) %>% select(query,subject,evalue,qlen,sstart,send)
-  blast=blast[!duplicated(query)]
+  blast=blast[!duplicated(query)] 
   
-  final=merge(blast,domain.table,by='query') %>% arrange(species,fam,subject) %>% select(-query, -start, -end) %>% data.table()
+  final=merge(blast,test.table,by='query') %>% arrange(species,fam,subject) %>% select(-start, -end) %>% unique.data.frame() %>% data.table()
   return(final)
 }
-domain.annot(too.short,'AedAeg')
+
+nez=domain.annot(too.short,'NezVir')
 
 
 

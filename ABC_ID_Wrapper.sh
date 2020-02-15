@@ -3,7 +3,7 @@ H='/data2/shane/Transporter_ID/ABC_id'
 PHYLO=$H/ABC_REF/Input_files/Phylo_list.txt
 SLC_FAM=$H/ABC_REF/Input_files/ABC_Families.txt
 SPEC=$H/ABC_REF/Input_files/target_species.tsv
-THREADS=24
+THREADS=36
 
 cd $H
 
@@ -31,5 +31,5 @@ done
 
 
 ### phylogeny
-mkdir ABC_phylo
-source ./ABC_ID_SCRIPTS/ABC_phylo.sh
+#mkdir ABC_phylo
+#source ./ABC_ID_SCRIPTS/ABC_phylo.sh
