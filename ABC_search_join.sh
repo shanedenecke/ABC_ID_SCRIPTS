@@ -16,7 +16,7 @@ cut -f 9 ./ABC_search/$bname/total_ABC_HMM.table | sed 's/\s+//g' \
 | /data2/shane/Applications/custom/unigene_fa_sub.sh $1 - > ./ABC_search/$bname/total_ABC_pre_blast.faa
 
 ## run reciprocal blast
-blastp -query ./ABC_search/$bname/total_ABC_pre_blast.faa -db ./model_database/marked_proteome/combined_marked_proteome.faa -outfmt "6 qseqid sseqid pident evalue qlen" -evalue 1e-3 -max_target_seqs 5 -max_hsps 1 -num_threads $THREADS > ./ABC_search/$bname/total_ABC_recip_blast.tsv
+blastp -query ./ABC_search/$bname/total_ABC_pre_blast.faa -db ./model_database/marked_proteome/combined_marked_proteome.faa -outfmt "6 qseqid sseqid pident evalue qlen sstart send" -evalue 1e-3 -max_target_seqs 5 -max_hsps 1 -num_threads $THREADS > ./ABC_search/$bname/total_ABC_recip_blast.tsv
 
 ### sort into families 
 Rscript $H/ABC_ID_SCRIPTS/ABC_Family_Sort.R ./ABC_search/$bname/total_ABC_recip_blast.tsv > ./ABC_search/$bname/total_ABC_dict.csv
