@@ -7,8 +7,8 @@ shhh(library(stringr))
 
 args = commandArgs(trailingOnly=TRUE)
 
-#setwd('/data2/shane/Transporter_ID/ABC_id')
-#args[1]='./ABC_search/NezVir/total_ABC_recip_blast.tsv'
+setwd('/data2/shane/Transporter_ID/ABC_id')
+args[1]='./ABC_search/NilLug/total_ABC_recip_blast.tsv'
 
 
 abc.number=function(x){
@@ -46,6 +46,8 @@ for(i in unique(recip_blast$query)){
     filter.list[[i]]=data.table(geneid=i,family=top_hit_fam)
   }else if(max(fams)/sum(fams)>.7){ ### take where all cases are from same family
     abc.total[[i]]=data.table(geneid=i,family=names(fams)[which(fams==max(fams))])
+  }else if(evalues[2]==evalues[1]){
+    filter.list[[i]]=data.table(geneid=i,family=top_hit_fam)
   }else if((evalues[2]/evalues[1]> 1e5) & grepl('ABC',top_hit_fam)){ ## Keep where top hit is SLC and overwhelmingly significant
     abc.total[[i]]=data.table(geneid=i,family=top_hit_fam)
   }else if(('ABCBF' %in% names(fams) & ('ABCBH' %in% names(fams)))){
