@@ -4,12 +4,23 @@ shhh(library(dplyr))
 shhh(library(tidyr))
 shhh(library(readr))
 shhh(library(stringr))
+shhh(library(optparse))
 
-args = commandArgs(trailingOnly=TRUE)
+#args = commandArgs(trailingOnly=TRUE)
 
-setwd('/data2/shane/Transporter_ID/ABC_id')
-args[1]='./ABC_search/NilLug/total_ABC_recip_blast.tsv'
+#setwd('/data2/shane/Transporter_ID/ABC_id')
+#args[1]='./ABC_search/NilLug/total_ABC_recip_blast.tsv'
 
+
+option_list = list(
+  make_option(c("-t", "--thresh"), type="numeric", default=.2, 
+              help="threshold for length filter", metavar="character")) 
+
+opt_parser = OptionParser(option_list=option_list)
+opt = parse_args(opt_parser)
+
+
+print(opt)
 
 abc.number=function(x){
   l=list()

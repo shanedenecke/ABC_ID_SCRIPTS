@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 H='/data2/shane/Transporter_ID/ABC_id'
 PHYLO=$H/ABC_REF/Input_files/Phylo_list.txt
-SLC_FAM=$H/ABC_REF/Input_files/ABC_Families.txt
 SPEC=$H/ABC_REF/Input_files/target_species.tsv
-THREADS=36
+QUAL_THRESH=.2
+THREADS=10
 
 cd $H
 
@@ -25,11 +25,11 @@ done
 
 
 ###### Filter
-
-
-
-
+source ./ABC_ID_SCRIPTS/ABC_domain_filter.sh
 
 ### phylogeny
-#mkdir ABC_phylo
 #source ./ABC_ID_SCRIPTS/ABC_phylo.sh
+
+#### CAFE
+source ./ABC_ID_SCRIPTS/ABC_Ultrametric_tree_generate.sh
+#Rscript ./ABC_ID_SCRIPTS/ABC_CAFE_prep.R
