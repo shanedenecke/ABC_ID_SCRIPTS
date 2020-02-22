@@ -28,8 +28,8 @@ done
 source ./ABC_ID_SCRIPTS/ABC_domain_filter.sh
 
 ### phylogeny
-#source ./ABC_ID_SCRIPTS/ABC_phylo.sh
+source ./ABC_ID_SCRIPTS/ABC_phylo.sh
 
 #### CAFE
 source ./ABC_ID_SCRIPTS/ABC_Ultrametric_tree_generate.sh
-#Rscript ./ABC_ID_SCRIPTS/ABC_CAFE_prep.R
+Rscript ./ABC_ID_SCRIPTS/ABC_CAFE_prep.R

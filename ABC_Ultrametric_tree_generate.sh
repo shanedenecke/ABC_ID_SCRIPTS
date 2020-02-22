@@ -61,7 +61,7 @@ do
 	sed -i 's/\./A/g' $fulltemp/Full_species.phy
 	/data2/shane/Applications/raxml/raxmlHPC-PTHREADS-AVX -f a -x 12345 -p 12345 -N 100 -T $THREADS -m PROTGAMMAAUTO -s $fulltemp/Full_species.phy -n $b.tre -w $fulltemp -o 7227_0
   
-  mv $fulltemp'/RAxML_bipartitions.'$b'.tre' ./CAFE/clean_raxml_trees/
+  cp $fulltemp'/RAxML_bipartitions.'$b'.tre' ./CAFE/clean_raxml_trees/
  
  fi
 done
