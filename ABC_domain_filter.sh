@@ -21,8 +21,10 @@ Rscript ./ABC_ID_SCRIPTS/ABC_Domain_Filter.R $QUAL_THRESH
 #grep -A 1 '_Unsorted' ./Filter/ABC_preliminary_total.faa | sed '/--/d' > ./Filter/ABC_unsorted_total.faa
 #/data2/shane/Applications/custom/ip_domain_extract.py ./Filter/ABC_unsorted_total.faa ./Filter/IPSCAN.tsv "PF00005" | sed 's/:/_/g' > ./Filter/ABC_unsorted_total_NBD.faa 
 #cat ./model_database/model_NBDs/Only_ABCs_NBD.faa | grep -E -A 1 'DroMel' >> ./Filter/ABC_unsorted_total_NBD.faa 
-#grep -f ./Filter/Quality_cutoff_species.txt ./Filter/ABC_unsorted_total_NBD.faa > ./Filter/ABC_unsorted_total_NBD_filter.faa
+#cut -f 2 ./Filter/Quality_cutoff_species.tsv > ./Filter/Quality_cutoff_species_names.txt
+#grep -A 1 -f ./Filter/Quality_cutoff_species_names.txt ./Filter/ABC_unsorted_total_NBD.faa | sed '/--/d' > ./Filter/ABC_unsorted_total_NBD_filter.faa
+##### NEEED TO FILTER OUT THOSE WITH DOMAINS TOO SHORT
 #cd Filter
-#nohup /data2/shane/Applications/custom/align_and_tree.sh ./ABC_unsorted_total_NBD.faa $THREADS &
+#nohup /data2/shane/Applications/custom/align_and_tree.sh ./Filter/ABC_unsorted_total_NBD_filter.faa 10 &
 #cd ..
 

@@ -28,8 +28,8 @@ for i in ./CAFE/species_lists/*final*
 do
   b=$(echo $(basename $i) | sed 's/.+CAFE.//g' | sed 's/_final_species.txt//g')
   
-  if [ $b = "Arthropod" ] || [ $b = "Arachnid" ]; then
-    /data2/shane/Applications/custom/OrthoDB/one_to_one_ID_exec.py -node "Metazoa" -taxid $i -output seq
+  if [ $b = "Arthropod" ]; then
+    /data2/shane/Applications/custom/OrthoDB/one_to_one_ID_exec.py -node "Arthropod" -taxid $i -output seq
   else
     /data2/shane/Applications/custom/OrthoDB/one_to_one_ID_exec.py -node "Arthropod" -taxid $i -output seq
   fi
@@ -48,19 +48,22 @@ do
   done
   
   #### merge all phylip files
-  Rscript ./ABC_ID_SCRIPTS/Phylip_merge.R $fulltemp
+  Rscript ./ABC_ID_SCRIPTS/ABC_Phylip_merge.R $fulltemp
   
   #### make trees 
-  if [ $b = "Arthropod" ] || [ $b = "Arachnid" ]; then
-	/data2/shane/Applications/raxml/raxmlHPC-PTHREADS-AVX -f a -x 12345 -p 12345 -N 100 -T $THREADS -m PROTGAMMAAUTO -s $fulltemp/Full_species.phy -n $b.tre -w $fulltemp -o 6239_0
+  if [ $b = "Arthropod" ]; then
+	/data2/shane/Applications/raxml/raxmlHPC-PTHREADS-AVX -f a -x 12345 -p 12345 -N 100 -T $THREADS -m PROTGAMMAAUTO -s $fulltemp/Full_species.phy -n $b.tre -w $fulltemp -o 6850_0
   elif [ $b = 'Lepidopteran' ]; then
 	#echo 'lep'       
 	/data2/shane/Applications/raxml/raxmlHPC-PTHREADS-AVX -f a -x 12345 -p 12345 -N 100 -T $THREADS -m PROTGAMMAAUTO -s $fulltemp/Full_species.phy -n $b.tre -w $fulltemp -o 7029_0
   elif [ $b = "Hemipteran" ]; then
 	sed -i 's/J/A/g' $fulltemp/Full_species.phy
 	sed -i 's/\./A/g' $fulltemp/Full_species.phy
-	/data2/shane/Applications/raxml/raxmlHPC-PTHREADS-AVX -f a -x 12345 -p 12345 -N 100 -T $THREADS -m PROTGAMMAAUTO -s $fulltemp/Full_species.phy -n $b.tre -w $fulltemp -o 7227_0
-  
+	/data2/shane/Applications/raxml/raxmlHPC-PTHREAD  S-AVX -f a -x 12345 -p 12345 -N 100 -T $THREADS -m PROTGAMMAAUTO -s $fulltemp/Full_species.phy -n $b.tre -w $fulltemp -o 7227_0
+  elif [ $b = 'Diptera' ]; then
+	/data2/shane/Applications/raxml/raxmlHPC-PTHREADS-AVX -f a -x 12345 -p 12345 -N 100 -T $THREADS -m PROTGAMMAAUTO -s $fulltemp/Full_species.phy -n $b.tre -w $fulltemp -o 7091_0
+
+
   cp $fulltemp'/RAxML_bipartitions.'$b'.tre' ./CAFE/clean_raxml_trees/
  
  fi

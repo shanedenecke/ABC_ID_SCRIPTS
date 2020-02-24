@@ -3,7 +3,7 @@ H='/data2/shane/Transporter_ID/ABC_id'
 PHYLO=$H/ABC_REF/Input_files/Phylo_list.txt
 SPEC=$H/ABC_REF/Input_files/target_species.tsv
 QUAL_THRESH=.2
-THREADS=10
+THREADS=2
 
 cd $H
 
@@ -22,7 +22,7 @@ cat ./ABC_REF/Input_files/Phylo_list.txt | while read i; do
   grep -A 1 $i ./phylo/ABC_total_NBD.faa >> ./phylo/ABC_total_NBD_species_filter.faa
 done
 sed -i 's/-/_/g' ./phylo/ABC_total_NBD_species_filter.faa
-
+sed -i 's/\./_/g' ./phylo/ABC_total_NBD_species_filter.faa
 ### sort into families 
 cat ./ABC_REF/Input_files/ABC_families.txt | while read i; do 
   grep -A 1 '__'$i ./phylo/ABC_total_NBD_species_filter.faa | sed '/--/d' > ./phylo/phylo_$i.faa
