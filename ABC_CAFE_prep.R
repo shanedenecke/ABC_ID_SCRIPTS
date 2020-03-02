@@ -100,7 +100,7 @@ for (i in iter){
   
   diff=ma-round(ma,-2)
   
-  pdf(paste0("./CAFE/clean_raxml_trees/",i,'_tree_ultrametric.pdf'),width=14,height=7)
+  #pdf(paste0("./CAFE/clean_raxml_trees/",i,'_tree_ultrametric.pdf'),width=14,height=7)
   gp=ggtree(plot.tree)#, mrsd = "2010-01-01")
   gp=gp+geom_tiplab(size=6)
   gp=gp+geom_nodepoint(size=5,col=cols)
@@ -109,7 +109,9 @@ for (i in iter){
   gp=gp+theme(axis.text.x=element_text(size=20,face='bold',color = 'black'))
   gp=gp+scale_x_continuous(breaks=diff+ma.r,labels=as.character(rev(ma.r)),limits=c(0,xma))
   print(gp)
-  dev.off()
+  #dev.off()
+  
+  ggsave(paste0("./CAFE/clean_raxml_trees/",i,'_tree_ultrametric.pdf'),plot=gp,,width=14,height=10)
   
   #l.tree.ch=chronopl(read.tree(paste0(paste0(H,'CAFE/trees/raxml_tree_named_',i,'.tre')), lambda=0.1)
   #l.tree.ch$edge.length=l.tree.ch$edge.length*1000

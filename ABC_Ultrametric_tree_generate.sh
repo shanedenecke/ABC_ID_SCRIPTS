@@ -3,7 +3,7 @@ H='/data2/shane/Transporter_ID/ABC_id'
 PHYLO=$H/ABC_REF/Input_files/Phylo_list.txt
 SPEC=$H/ABC_REF/Input_files/target_species.tsv
 QUAL_THRESH=.2
-THREADS=24
+THREADS=20
 
 cd $H
 
@@ -17,7 +17,7 @@ mkdir ./CAFE/clean_raxml_trees
 
 
 for i in ./ABC_REF/CAFE/*; do
-  b=$(echo $(basename $i) | sed 's/.+CAFE.//g' | sed 's/_species_list.txt//g')
+  b=$(echo $(basename $i) | sed 's/.+CAFE.//g' | sed 's/_preliminary_species.txt//g')
   cp $i ./CAFE/species_lists/$b'_preliminary_species.txt'
   grep -f ./Filter/Quality_cutoff_species.txt ./CAFE/species_lists/$b'_preliminary_species.txt' > ./CAFE/species_lists/$b'_final_species.txt'
 done
@@ -42,7 +42,7 @@ do
   ### perform alignments for all one to ones 
   for x in  $fulltemp/*
   do
-    mafft --thread $THREADS $x > $x'.aln'
+    mafft --quiet --thread $THREADS $x > $x'.aln'
     /data2/shane/Applications/trimAl/source/trimal -in $x'.aln' -out $x'.aln.trimm'
     /data2/shane/Applications/custom/fasta_2_phylip.sh $x'.aln.trimm' | sed '1d' > $x'.aln.trimm.phy'
   done
@@ -59,7 +59,7 @@ do
   elif [ $b = "Hemipteran" ]; then
 	sed -i 's/J/A/g' $fulltemp/Full_species.phy
 	sed -i 's/\./A/g' $fulltemp/Full_species.phy
-	/data2/shane/Applications/raxml/raxmlHPC-PTHREAD  S-AVX -f a -x 12345 -p 12345 -N 100 -T $THREADS -m PROTGAMMAAUTO -s $fulltemp/Full_species.phy -n $b.tre -w $fulltemp -o 7227_0
+	/data2/shane/Applications/raxml/raxmlHPC-PTHREADS-AVX -f a -x 12345 -p 12345 -N 100 -T $THREADS -m PROTGAMMAAUTO -s $fulltemp/Full_species.phy -n $b.tre -w $fulltemp -o 7227_0
   elif [ $b = 'Diptera' ]; then
 	/data2/shane/Applications/raxml/raxmlHPC-PTHREADS-AVX -f a -x 12345 -p 12345 -N 100 -T $THREADS -m PROTGAMMAAUTO -s $fulltemp/Full_species.phy -n $b.tre -w $fulltemp -o 7091_0
 
