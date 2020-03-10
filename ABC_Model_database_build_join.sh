@@ -31,14 +31,3 @@ mkdir ./model_database/model_NBDs
 mv ./Db_build_temp/*.hmm ./model_database/HMM_databases/
 mv ./Db_build_temp/combined_marked_proteome.fa* ./model_database/marked_proteome/
 mv ./Db_build_temp/*NBD* ./model_database/model_NBDs/
-
-
-#cat ./ABC_REF/Input_files/ABC_families.txt | while read i
-#do
-#  b='./Db_build_temp/Model_'$(echo $i | sed 's/_//g')'_NBD.faa'
-#  grep -A 1 $i ./Db_build_temp/Only_ABCs_NBD.faa | sed '/--/d' > $b
-#  mafft --thread $THREADS $b > $b.aln
-#  $H'/ABC_ID_SCRIPTS/general_scripts/trimAl/source/trimal' -in $b.aln -out $b.trimmed
-#  hmmbuild $b.hmm $b.trimmed
-#done
-

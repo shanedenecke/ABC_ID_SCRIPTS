@@ -2,6 +2,7 @@ shhh <- suppressPackageStartupMessages
 shhh(library(dplyr))
 shhh(library(data.table))
 shhh(library(ggplot2))
+shhh(library(gplots))
 
 
 
@@ -90,15 +91,16 @@ for(i in iter.i){
     ### Make ggplot
     gp=ggplot(data=sub,aes_string(x=j,y=i,fill=j))
     gp=gp+geom_boxplot(outlier.size=1)
+    gp=gp+labs(x=paste0('\n',j),y=paste0(i,'\n'))
     gp=gp+theme_bw()
-    gp=gp+theme(text=element_text(face="bold",family="serif"),panel.grid=element_blank(),
+    gp=gp+theme(text=element_text(face="bold",family="serif",size=16),panel.grid=element_blank(),
                 axis.ticks.x=element_line(),panel.border=element_rect(colour="black",fill=NA),
                 strip.text=element_text(size=20),strip.background=element_rect("white"),
-                axis.title=element_text(size=17),axis.text.x=element_text(angle=45,hjust=1),
+                axis.title=element_text(size=17),axis.text.x=element_text(size=16,angle=30,hjust=1),
                 legend.position = 'none',plot.title = element_text(hjust = 0.5))
     
     #print(gp)
-    ggsave(filename=paste0('./Final_outputs/Group_Comparisons/ABC_plots/',i,'_',j,'.png'),gp,device='png',height=10,width=10)
+    ggsave(filename=paste0('./Final_outputs/Group_Comparisons/ABC_plots/',i,'_',j,'.png'),gp,device='png',height=7,width=7)
     
     
     ##### ANOVA
@@ -121,5 +123,100 @@ anova.summary=rbindlist(anova.l)
 anova.summary$bonf=p.adjust(anova.summary$pval,method='bonferroni') 
 anova.filter=anova.summary %>% arrange(bonf) %>% filter(bonf<1e-2)  %>% data.table()
 anova.distinct=anova.filter %>% select(family,co_variable) %>% unique.data.frame()
-fwrite(anova.filter,'./Final_outputs/Group_Comparisons/ABC_plots')
+fwrite(anova.filter,'./Final_outputs/Group_Comparisons/ABC_plots/ANOVA_table.csv')
+
+
+#### Produce heatmap 
+
+#counts.summary$SLC_62=NULL
+m=full.counts %>% filter(abbreviation!='CaeEle' & abbreviation!='TetUrt') %>% data.table()
+
+
+groups=c('Hymenoptera','Coleoptera','Hemiptera','Lepidoptera','Diptera','Arachnida','Crustacea')
+cols=c('firebrick2','blue4','magenta','green3','orange','mediumorchid3','gold3')
+
+names(groups)=cols
+final.cols=c()
+for(i in 1:nrow(m)){
+  g=m$Taxonomic_Classification[i]
+  if(g %in% groups){final.cols[i]=names(groups[which(groups==g)])}else{final.cols[i]='black'}
+}
+
+counts.matrix=m %>% 
+  select(matches("ABC"),-ABC_total) %>%
+  as.matrix() %>% t()
+colnames(counts.matrix)=m$Species_name
+
+pdf('./Final_outputs/Group_Comparisons/ABC_heatmap.pdf',width=20,height=10)
+hm=heatmap.2(counts.matrix,Rowv=F,Colv=T,scale="row",col=colorpanel(75,'blue','grey','red'),
+             dendrogram = 'column',tracecol=NA,
+             colCol = final.cols,margins = c(10,8),cexRow=1.5,
+             density.info = 'density',denscol='black')
+dev.off()
+
+
+
+
+
+
+
+
+
+#################### FIGURE 3
+
+## Figure 3
+
+
+#sub.size=total.counts[Species_name==sp.input.mod]$fam_size
+
+gp=ggplot(full.count,aes(x=SLC_total))
+gp=gp+geom_histogram(colour="black", fill="grey75",binwidth=20)
+gp=gp+geom_density(alpha=.2, fill="#FF6666")
+gp=gp+labs(x='\nTotal SLCs Identified in Species',y='Frequency\n')
+gp=gp+theme_bw()
+gp=gp+theme(text=element_text(face="bold",family="serif"),panel.grid=element_blank(),
+            axis.ticks.x=element_line(),panel.border=element_rect(colour="black",fill=NA),
+            axis.title=element_text(size=22),axis.text.x=element_text(size=18),
+            legend.position = 'none',plot.title = element_text(hjust = 0.5))
+print(gp)
+
+ggsave(gp,file='./FigureS2_histogram.pdf',device='pdf',width=20,height=10,units='cm')
+
+##################### FIGURE 4 #####################
+counts.summary=full.count
+#counts.summary$SLC_62=NULL
+m=merge(counts.summary,co.var,by='abbreviation') %>% filter(abbreviation!='HomSap') %>% data.table()
+
+
+groups=c('Hymenoptera','Coleoptera','Hemiptera','Lepidoptera','Diptera','Arachnida','Crustacea')
+cols=c('firebrick2','blue4','magenta','green3','orange','mediumorchid3','gold3')
+#cols=pal_aaas('default')(7)
+
+names(groups)=cols
+final.cols=c()
+for(i in 1:nrow(m)){
+  g=m$Taxonomic_Classification[i]
+  
+  if(g %in% groups){
+    final.cols[i]=names(groups[which(groups==g)])
+  }else{
+    final.cols[i]='black'
+  }
+}
+counts.matrix=m %>% 
+  select(matches("SLC"),-matches('Unsorted'),-matches('Unsorted'),-SLC_total) %>%
+  as.matrix() %>% t()
+colnames(counts.matrix)=m$Species_name[m$Species_name!='Homo_sapiens']
+
+#par(mar=c(1,4,10,3)) 
+pdf('Figure3_heatmap.pdf',width=20,height=10)
+heatmap.2(counts.matrix,Rowv=F,Colv=T,scale="row",col=colorpanel(75,'blue','grey','red'),dendrogram = 'column',tracecol=NA,colCol = final.cols,margins = c(10,5),cexRow=.7,
+          density.info = 'density',denscol='black')
+dev.off()
+
+
+
+
+
+
 

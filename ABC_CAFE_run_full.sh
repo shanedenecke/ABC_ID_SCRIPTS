@@ -39,7 +39,7 @@ do
   python2 $H/ABC_ID_SCRIPTS/Fulton_python_scripts/cafetutorial_draw_tree.py -i ./CAFE/outputs/$b'_ABC_summary.txt_node.txt' \
   -t $t \
   -d $d \
-  -y Expansions -o ./CAFE/outputs/Arthropod_Expansions_tree.png
+  -y Expansions -o ./CAFE/outputs/$b'_Expansions_tree.png'
 done
 
 
