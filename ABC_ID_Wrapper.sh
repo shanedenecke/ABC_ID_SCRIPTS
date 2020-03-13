@@ -3,7 +3,7 @@ H='/data2/shane/Transporter_ID/ABC_id'
 PHYLO=$H/ABC_REF/Input_files/Phylo_list.txt
 SPEC=$H/ABC_REF/Input_files/target_species.tsv
 QUAL_THRESH=.2
-THREADS=6
+THREADS=2
 
 cd $H
 
@@ -28,8 +28,16 @@ done
 source ./ABC_ID_SCRIPTS/ABC_domain_filter.sh
 
 ### phylogeny
-source ./ABC_ID_SCRIPTS/ABC_phylo.sh
+mkdir phylo
+mkdir ./phylo/clean_trees
+#source ./ABC_ID_SCRIPTS/ABC_phylo.sh ###################### NEED TO EDIT
+cp ./ABC_REF/phylo_premade/* ./phylo/clean_trees/
 
 #### CAFE
-source ./ABC_ID_SCRIPTS/ABC_Ultrametric_tree_generate.sh
+mkdir CAFE
+mkdir ./CAFE/clean_raxml_trees
+
+#source ./ABC_ID_SCRIPTS/ABC_Ultrametric_tree_generate.sh
+cp ./ABC_REF/ultrametric_tree_backup/*.tre ./CAFE/clean_raxml_trees/
+
 Rscript ./ABC_ID_SCRIPTS/ABC_CAFE_prep.R

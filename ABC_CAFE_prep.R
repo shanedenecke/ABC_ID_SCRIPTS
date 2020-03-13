@@ -10,15 +10,15 @@ shhh(library(tidyr))
 #args = commandArgs(trailingOnly=TRUE)
 #H=as.character(args[1])
 setwd('/data2/shane/Transporter_ID/ABC_id')
-used.species=readLines('./Filter/Quality_cutoff_species.txt')
+used.species=readLines('./Filter/preliminary/Quality_threshold_species.txt')
 dir.create('./CAFE',showWarnings = F)
 dir.create('./CAFE/CAFE_tables',showWarnings = F)
 
 
 ### Import data
-abc.counts=fread('./Filter/Counts/Full_transporter_counts.csv')
+abc.counts=fread('./Filter/Total_combined/Full_transporter_counts.csv')
 metadata=fread('./ABC_REF/species_metadata/Arthropod_species_metadata.tsv',header=T) %>% 
-  select(Species_name,abbreviation,taxid_code) %>% filter(taxid_code %in% used.species) %>% data.table()
+  select(Species_name,abbreviation,taxid_code) %>% filter(abbreviation %in% used.species) %>% data.table()
 #taxid_key=fread('./ABC_REF/species_metadata/taxid_key.tsv',col.names = c('taxid_code','abbreviation','species_name'))
 #system('cp ./ABC_REF/ultrametric_tree_backup/* ./CAFE/clean_raxml_trees')
 

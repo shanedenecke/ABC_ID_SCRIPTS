@@ -4,17 +4,23 @@
 
 cd $H
 bname=$(basename $1 | sed 's/_unigene.faa//g')
+echo $bname
 #bname=$(basename $1 | sed 's/_unigene.faa//g')
 
 mkdir ABC_search/$bname
 
 ### perform HMM search
 hmmsearch --notextw -E 20 ./model_database/HMM_databases/Only_ABCs.hmm $1 | sed -n '/Scores for complete sequences/,/------ inclusion threshold/p' | sed '$ d' | awk 'NR > 4 { print }' | awk '/^$/{exit} {print $0}' | sed -e "s/\s\{1,\}/\t/g" | cut -f 2- > ./ABC_search/$bname/total_ABC_HMM.table
+#hmmsearch --notextw -E 20 ./model_database/HMM_databases/Only_ABCs.hmm $i | sed -n '/Scores for complete sequences/,/------ inclusion threshold/p' | sed '$ d' | awk 'NR > 4 { print }' | awk '/^$/{exit} {print $0}' | sed -e "s/\s\{1,\}/\t/g" | cut -f 2- > ./ABC_search/$bname/total_ABC_HMM.table
 
 ### clean HMM search
 cut -f 9 ./ABC_search/$bname/total_ABC_HMM.table | sed 's/\s+//g' \
 | /data2/shane/Applications/custom/unigene_fa_sub.sh $1 - > ./ABC_search/$bname/total_ABC_pre_blast.faa
 
+#cut -f 9 ./ABC_search/$bname/total_ABC_HMM.table | sed 's/\s+//g' \
+#| /data2/shane/Applications/custom/unigene_fa_sub.sh $i - > ./ABC_search/$bname/total_ABC_pre_blast.faa
+
+echo 'BLAST AWAY'
 ## run reciprocal blast
 blastp -query ./ABC_search/$bname/total_ABC_pre_blast.faa -db ./model_database/marked_proteome/combined_marked_proteome.faa -outfmt "6 qseqid sseqid pident evalue qlen sstart send" -evalue 1e-3 -max_target_seqs 5 -max_hsps 1 -num_threads $THREADS > ./ABC_search/$bname/total_ABC_recip_blast.tsv
 
