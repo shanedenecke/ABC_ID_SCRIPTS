@@ -3,7 +3,7 @@ H='/data2/shane/Transporter_ID/ABC_id'
 PHYLO=$H/ABC_REF/Input_files/Phylo_list.txt
 SPEC=$H/ABC_REF/Input_files/target_species.tsv
 QUAL_THRESH=.2
-THREADS=22
+THREADS=14
 
 cd $H
 
@@ -12,7 +12,6 @@ cd $H
 mkdir CAFE
 mkdir ./CAFE/Ultrametric_tree
 mkdir ./CAFE/species_lists
-mkdir ./CAFE/clean_raxml_trees
 
 
 

@@ -11,7 +11,7 @@ args = commandArgs(trailingOnly=TRUE)
 setwd(args[1])
 #args[1]='./ABC_search/MyzPer/total_ABC_recip_blast.tsv'
 
-for(x in list.files()[grepl('ABC',list.files())]){
+for(x in list.files()[grepl('ABC.+.phy',list.files())]){
   a=fread(x)
   all=a$V1
   uni=unique(all)

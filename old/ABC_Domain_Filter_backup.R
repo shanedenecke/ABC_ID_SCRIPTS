@@ -7,15 +7,10 @@ shhh(library(tidyr))
 shhh(library(readr))
 shhh(library(stringr))
 shhh(library(seqinr))
-shhh(library(optparse))
-
 
 #### set up directories and args
-#setwd('/data2/shane/Transporter_ID/ABC_id')
-dir.create('Filter',showWarnings=F)
-dir.create('./Filter/Full_transporters',showWarnings=F)
-dir.create('./Filter/Full_transporters/proteomes',showWarnings=F)
-dir.create('./Filter/Full_transporters/dicts',showWarnings=F)
+setwd('/data2/shane/Transporter_ID/ABC_id')
+dir.create('./Filter/preliminary_good',showWarnings=F)
 dir.create('./Filter/Short_transporters',showWarnings=F)
 dir.create('./Filter/Short_transporters/proteomes',showWarnings=F)
 dir.create('./Filter/Short_transporters/dicts',showWarnings=F)
@@ -23,12 +18,14 @@ dir.create('./Filter/Long_transporters',showWarnings=F)
 dir.create('./Filter/Long_transporters/proteomes',showWarnings=F)
 dir.create('./Filter/Long_transporters/dicts',showWarnings=F)
 dir.create('./Filter/Counts',showWarnings=F)
+dir.create('./Filter/Unsorted_clean',showWarnings=F)
 
+### Import arguments
 args = commandArgs(trailingOnly=TRUE)
-print(args[1])
+args[1]=.2
 thresh=as.numeric(args[1])
 
-#args[1]=.2
+### Import key and metadata
 key=data.table(family=c(gsub('_','',readLines('./ABC_REF/Input_files/ABC_families.txt')),'ABC_Unsorted_'),domains=c(2,2,1,2,1,2,2,1,1,1))
 metadata=fread('./ABC_REF/species_metadata/Arthropod_species_metadata.tsv',header=T) %>% 
   select(Species_name,abbreviation,taxid_code)
@@ -75,15 +72,6 @@ fasta.write=function(x,loc){
   }
 }
 
-	
-	
-		
-
-### Run IPSCAN
-#system('cat ./preliminary_ABC/proteomes/* >> ./Filter/ABC_preliminary_total.faa')
-#system('cat ./Db_build_temp/Only_ABCs.faa* >> ./Filter/ABC_preliminary_total.faa')
-#system('/home/pioannidis/Programs/interproscan-5.30-69.0/interproscan.sh -appl pfam -i ./Filter/ABC_preliminary_total.faa -o ./Filter/IPSCAN.tsv -f TSV')
-
 
 ### Parse IPscan
 #ipscan=fread('/data2/shane/Transporter_ID/ABC_id/Filter/old_IP/IP_combined.tsv',sep='\t',fill=T)[V5=='PF00005'] %>% select(V1,V3,V7,V8) %>% rename(name=V1,len=V3,start=V7,end=V8)
@@ -92,12 +80,6 @@ ipscan$fam=gsub('^.+__(.+)__.+$','\\1',ipscan$name)
 iptable=ipscan %>% group_by(name,fam,len) %>% summarize(domains=length(name)) %>% data.table()
 total.fasta=read.fasta('./Filter/ABC_preliminary_total.faa',set.attributes = F,as.string = T,forceDNAtolower = F)
 
-
-
-##### Sort Transporters 
-unsorted=iptable[fam=='ABC_Unsorted_'] %>% domain.annot() 
-#%>% group_by(species) %>% summarize(count=length(code))
-iptable=iptable[fam!='ABC_Unsorted_']
 short.list=list()
 good.list=list()
 long.list=list()
@@ -108,24 +90,22 @@ for(i in unique(iptable$fam)){
   good.list[[i]]=sub[domains==mins]
   long.list[[i]]=sub[domains>mins]
 }
-too.short=rbindlist(short.list) %>% domain.annot() 
-good=rbindlist(good.list) %>% domain.annot() 
-too.long=rbindlist(long.list) %>% domain.annot() 
+too.short=rbindlist(short.list) %>% filter(!grepl('Unsorted',name)) %>% domain.annot() %>% data.table()
+good=rbindlist(good.list) %>% filter(!grepl('Unsorted',name)) %>% domain.annot() %>% data.table()
+too.long=rbindlist(long.list) %>% filter(!grepl('Unsorted',name)) %>% domain.annot() %>% data.table()
 
-### annotate %>% split by species %>% write to separate dictionaries %>% subset fasta files 
+#### Deal with unsorted proteins
+unsorted.good=iptable[fam=='ABC_Unsorted_' & len >100 & domains<3]
+unsorted.fa=total.fasta[(names(total.fasta) %in% unsorted.good$name) | (grepl('DroMel',names(total.fasta)))]
+write.fasta(sequences = unsorted.fa,names = gsub(':','_',names(unsorted.fa),fixed=T),file.out = './Filter/Unsorted_clean/Unsorted_good.faa')
+
 
 ###### ADD in model species to good
-
 
 #### WRITE dictionaries
 dict.write(too.short,'Short')
 dict.write(too.long,'Long')
 dict.write(good,'Full')
-
-#### Subset fasta files 
-
-
-
 
 #### produce counts files
 good.sum=good %>% count.fams() %>% spread(key=species,value=count) %>%
