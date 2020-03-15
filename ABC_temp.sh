@@ -1,20 +1,12 @@
 #!/usr/bin/env bash
-H='/data2/shane/Transporter_ID/ABC_id'
+H='~/Transporter_ID/ABC_ID'
 PHYLO=$H/ABC_REF/Input_files/Phylo_list.txt
 SPEC=$H/ABC_REF/Input_files/target_species.tsv
 QUAL_THRESH=.2
-THREADS=12
+THREADS=14
 
 cd $H
 
-##############3) Search proteomes
-mkdir ABC_search
-mkdir preliminary_ABC
-mkdir preliminary_ABC/proteomes
-mkdir preliminary_ABC/dicts
-for i in ./proteomes/*; do
-  source ./ABC_ID_SCRIPTS/ABC_search_join.sh $i
-done
+###############1) proteome prepare
+source ./ABC_ID_SCRIPTS/ABC_proteome_prepare.sh
 
-###### Filter
-source ./ABC_ID_SCRIPTS/ABC_domain_filter.sh
