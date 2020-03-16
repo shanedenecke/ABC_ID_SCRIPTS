@@ -4,7 +4,6 @@ shhh(library(dplyr))
 shhh(library(tidyr))
 shhh(library(readr))
 shhh(library(stringr))
-shhh(library(optparse))
 
 args = commandArgs(trailingOnly=TRUE)
 

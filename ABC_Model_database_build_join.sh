@@ -15,8 +15,11 @@ makeblastdb -in ./Db_build_temp/combined_marked_proteome.faa -parse_seqids -dbty
 
 ###### Extract all model ABC sequences into separate family fasta files, align them and then create HMM database
 grep -A 1 -E "__ABC[A-Z]+" ./Db_build_temp/combined_marked_proteome.faa | sed '/--/d' > ./Db_build_temp/Only_ABCs.faa
-~/interproscan-5.30-69.0/interproscan.sh -appl pfam -i Db_build_temp/Only_ABCs.faa -o Db_build_temp/IPSCAN -f TSV
-~/Applications/custom/ip_domain_extract.py ./Db_build_temp/Only_ABCs.faa ./Db_build_temp/IPSCAN "PF00005" > ./Db_build_temp/Only_ABCs_NBD.faa
+#~/Applications/interproscan-5.30-69.0/interproscan.sh -appl pfam -i Db_build_temp/Only_ABCs.faa -o Db_build_temp/IPSCAN -f TSV
+#~/Applications/Custom_Applications/ip_domain_extract.py ./Db_build_temp/Only_ABCs.faa ./Db_build_temp/IPSCAN "PF00005" > ./Db_build_temp/Only_ABCs_NBD.faa
+
+hmmsearch --domtblout ./Db_build_temp/PF0005_HMM_output.tsv ./ABC_REF/Model_ABC_sets/ABC_tran.hmm ./Db_build_temp/Only_ABCs.faa > ./Db_build_temp/hmm_junk.txt
+~/Applications/Custom_Applications/hmmsearch_pfam_domain_parse.py -fasta ./Db_build_temp/Only_ABCs.faa -table ./Db_build_temp/PF0005_HMM_output.tsv > ./Db_build_temp/Only_ABCs_NBD.faa
 
 mafft --thread $THREADS ./Db_build_temp/Only_ABCs.faa > ./Db_build_temp/Only_ABCs.aln
 $H'/ABC_ID_SCRIPTS/general_scripts/trimAl/source/trimal' -in ./Db_build_temp/Only_ABCs.aln -out ./Db_build_temp/Only_ABCs.trimmed

@@ -9,12 +9,12 @@ shhh(library(stringr))
 shhh(library(seqinr))
 
 #### set up directories and args
-setwd('/data2/shane/Transporter_ID/ABC_id')
+#setwd('~/Transporter_ID/ABC_id')
 dir.create('./Filter/preliminary')
 
 ### Import arguments
 args = commandArgs(trailingOnly=TRUE)
-args[1]=.3
+#args[1]=.3
 thresh=as.numeric(args[1])
 
 ### Import key and metadata
@@ -45,17 +45,25 @@ count.fams=function(x){
 }
 
 ### Parse IPscan
+pfam.scan=fread('./Filter/HMM_PF00005_output_clean.tsv',select=c(1,3,20,21)) %>% rename(name=V1,len=V3,start=V20,end=V21)
+pfam.scan$fam=gsub('^.+__(.+)__.+$','\\1',pfam.scan$name)
+pfam.table=pfam.scan %>% group_by(name,fam,len) %>% summarize(domains=length(name)) %>% filter(fam!="ABC_Unsorted_") %>% data.table()
+
+
 #ipscan=fread('/data2/shane/Transporter_ID/ABC_id/Filter/old_IP/IP_combined.tsv',sep='\t',fill=T)[V5=='PF00005'] %>% select(V1,V3,V7,V8) %>% rename(name=V1,len=V3,start=V7,end=V8)
-ipscan=fread('./Filter/IPSCAN.tsv',sep='\t',fill=T)[V5=='PF00005'] %>% select(V1,V3,V7,V8) %>% rename(name=V1,len=V3,start=V7,end=V8)
-ipscan$fam=gsub('^.+__(.+)__.+$','\\1',ipscan$name)
-iptable=ipscan %>% group_by(name,fam,len) %>% summarize(domains=length(name)) %>% filter(fam!="ABC_Unsorted_") %>% data.table()
+#ipscan=fread('./Filter/IPSCAN.tsv',sep='\t',fill=T)[V5=='PF00005'] %>% select(V1,V3,V7,V8) %>% rename(name=V1,len=V3,start=V7,end=V8)
+#ipscan$fam=gsub('^.+__(.+)__.+$','\\1',ipscan$name)
+#iptable=ipscan %>% group_by(name,fam,len) %>% summarize(domains=length(name)) %>% filter(fam!="ABC_Unsorted_") %>% data.table()
+
+
+
 total.fasta=seqinr::read.fasta('./Filter/ABC_preliminary_total.faa',set.attributes = F,as.string = T,forceDNAtolower = F)
 
 short.list=list()
 good.list=list()
 long.list=list()
-for(i in unique(iptable$fam)){
-  sub=iptable[fam==i]
+for(i in unique(pfam.table$fam)){
+  sub=pfam.table[fam==i]
   mins=key[family==i]$domains
   short.list[[i]]=sub[domains<mins]
   good.list[[i]]=sub[domains==mins]
