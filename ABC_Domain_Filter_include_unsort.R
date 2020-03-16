@@ -11,10 +11,9 @@ shhh(library(ggtree))
 shhh(library(treeio))
 shhh(library(ggplot2))
 
-#######
-####
+
 ### Import key and metadata
-setwd('/data2/shane/Transporter_ID/ABC_id')
+#setwd('~/Transporter_ID/ABC_id')
 dir.create('./Filter/Final_transporters')
 dir.create('./Filter/Final_transporters/dicts')
 dir.create('./Filter/Final_transporters/proteomes')
@@ -38,29 +37,31 @@ count.fams=function(x){
   return(y)
 }
 
-### Parse IPscan
-ipscan=fread('./Filter/IPSCAN.tsv',sep='\t',fill=T)[V5=='PF00005'] %>% select(V1,V3,V7,V8) %>% rename(name=V1,len=V3,start=V7,end=V8)
-ipscan$fam=gsub('^.+__(.+)__.+$','\\1',ipscan$name)
-iptable=ipscan %>% group_by(name,fam,len) %>% summarize(domains=length(name)) %>% filter(fam!="ABC_Unsorted_") %>% data.table()
-total.fasta=seqinr::read.fasta('./Filter/ABC_preliminary_total.faa',set.attributes = F,as.string = T,forceDNAtolower = F)
+### Parse PfamScan
+pfam.scan=fread('./Filter/HMM_PF00005_output_clean.tsv',select=c(1,3,20,21)) %>% rename(name=V1,len=V3,start=V20,end=V21)
+pfam.scan$fam=gsub('^.+__(.+)__.+$','\\1',pfam.scan$name)
+pfam.table=pfam.scan %>% group_by(name,fam,len) %>% summarize(domains=length(name)) %>% filter(fam!="ABC_Unsorted_") %>% data.table()
 
 ##############################################
 ########## read and process unsorted tree
-unsorted.tree=read.tree('./Filter/Unsorted_clean/Unsorted_ABC.nwk')
+unsorted.tree=read.tree('./Filter/Unsorted_clean/RAxML_bipartitions.Unsorted.nwk')
 #collapsed.tree=di2multi4node(unsorted.tree,10)
 
 ### mark drosophila as red
 cols=rep('black',length=length(unsorted.tree$tip.label))
 cols[grepl('DroMel',unsorted.tree$tip.label)]='red'
+cols[grepl('TriCas',unsorted.tree$tip.label)]='blue'
 
-gp=ggtree(unsorted.tree,size=2)
-gp=gp+geom_tiplab(size=4,fontface='bold',align=T,color=cols)
+
+gp=ggtree(unsorted.tree,size=2,layout='rectangular')
+gp=gp+geom_tiplab(size=4,fontface='bold',color=cols)
 gp=gp+geom_nodepoint(size=4,col='black')
-gp=gp+geom_nodelab(hjust=1,vjust=.3,size=1.5,fontface='bold',col='white')
-gp=gp+lims(x=c(0,20))
+#gp=gp+geom_nodelab(hjust=1,vjust=.3,size=1.5,fontface='bold',col='white')
+#gp=gp+lims(x=c(0,20))
 gp=gp+theme(title = element_text(size=12))
 print(gp)
-ggsave(plot=gp,filename ='./Filter/Unsorted_clean/Unosrted_ABC_phylogeny.pdf',device='pdf',height=40,width=30,limitsize = F)
+#ggsave(plot=gp,filename ='./Filter/Unsorted_clean/Unosrted_ABC_phylogeny.pdf',device='pdf',height=40,width=30,limitsize = F)
+ggsave(plot=gp,filename ='~/Dropbox/Unosrted_ABC_phylogeny.pdf',device='pdf',height=40,width=30,limitsize = F)
 
 
 tbl=as_tibble(unsorted.tree)

@@ -40,7 +40,7 @@ species=unlist(strsplit(args[1],'\\/'))[3]
 target.fam=as.character(str_match(unlist(strsplit(args[1],'\\/'))[4],'ABC[A-Z]+'))
 abc.total=list()
 filter.list=list()
-
+unsorted.list=list()
 
 for(i in unique(recip_blast$query)){
   sub=recip_blast[query==i]
@@ -52,13 +52,13 @@ for(i in unique(recip_blast$query)){
     
   if(!grepl('ABC[A-Z]+',sub$subject[1])){ ## filter out any that have top blast hit not an ABC
     filter.list[[i]]=data.table(geneid=i,family=top_hit_fam)
-  }else if(min(evalues)>1e-5){
+  }else if(min(evalues)>1e-5){ #### remove any where top hit is above 1e-5
     filter.list[[i]]=data.table(geneid=i,family=top_hit_fam)
-  }else if(max(fams)/sum(fams)>.7){ ### take where all cases are from same family
+  }else if(max(fams)/sum(fams)>.7){ ### take 4/5 cases are from the same family
     abc.total[[i]]=data.table(geneid=i,family=names(fams)[which(fams==max(fams))])
-  }else if(evalues[2]==evalues[1]){
-    filter.list[[i]]=data.table(geneid=i,family=top_hit_fam)
-  }else if((evalues[2]/evalues[1]> 1e5) & grepl('ABC',top_hit_fam)){ ## Keep where top hit is SLC and overwhelmingly significant
+  }else if(length(unique(na.omit(sub$subject[1:3])))==1){ ### where top 3 are from the same family
+    abc.total[[i]]=data.table(geneid=i,family=top_hit_fam)
+  }else if((evalues[2]/evalues[1]> 1e5) & grepl('ABC',top_hit_fam)){ ## Keep where top hit is ABC and overwhelmingly significant
     abc.total[[i]]=data.table(geneid=i,family=top_hit_fam)
   }else if(('ABCBF' %in% names(fams) & ('ABCBH' %in% names(fams)))){
     if(qlen>800){
@@ -66,8 +66,12 @@ for(i in unique(recip_blast$query)){
     }else{
       abc.total[[i]]=data.table(geneid=i,family='ABCBH')
     }
-  }else { ## keep where 4 out of 5 are SLCs but can be any family
-    abc.total[[i]]=data.table(geneid=i,family='ABC_Unsorted_')
+  }else if(qlen>300){ ## keep where 4 out of 5 are ABCs but can be any family
+    abc.total[[i]]=data.table(geneid=i,family='ABC_Unsorted')
+    unsorted.list[[i]]=sub
+  }
+  else{
+    filter.list[[i]]=data.table(geneid=i,family=top_hit_fam)
   }
 }
 
