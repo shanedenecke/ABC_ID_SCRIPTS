@@ -7,8 +7,8 @@ shhh(library(stringr))
 
 args = commandArgs(trailingOnly=TRUE)
 
-#setwd('/data2/shane/Transporter_ID/ABC_id')
-#args[1]='./ABC_search/NilLug/total_ABC_recip_blast.tsv'
+#setwd('/home/shanedenecke/Dropbox/quick_temp/')
+#args[1]='/home/shanedenecke/Dropbox/quick_temp/total_ABC_recip_blast.tsv'
 
 
 #option_list = list(
@@ -58,6 +58,8 @@ for(i in unique(recip_blast$query)){
     abc.total[[i]]=data.table(geneid=i,family=names(fams)[which(fams==max(fams))])
   }else if(length(unique(na.omit(sub$subject[1:3])))==1){ ### where top 3 are from the same family
     abc.total[[i]]=data.table(geneid=i,family=top_hit_fam)
+  } else if(evalues[1]==0 & grepl('ABC',top_hit_fam)){ ## Keep if evalue ==0
+    abc.total[[i]]=data.table(geneid=i,family=top_hit_fam)
   }else if((evalues[2]/evalues[1]> 1e5) & grepl('ABC',top_hit_fam)){ ## Keep where top hit is ABC and overwhelmingly significant
     abc.total[[i]]=data.table(geneid=i,family=top_hit_fam)
   }else if(('ABCBF' %in% names(fams) & ('ABCBH' %in% names(fams)))){
@@ -74,7 +76,7 @@ for(i in unique(recip_blast$query)){
     filter.list[[i]]=data.table(geneid=i,family=top_hit_fam)
   }
 }
-
+  
 #else if(length(fams[fams>3])>0){ ### Sort into a family if there are 4 or more of the top 5 blast hits in that family
 #  abc.total[[i]]=data.table(geneid=i,family=names(fams[fams>3]))
 #} 

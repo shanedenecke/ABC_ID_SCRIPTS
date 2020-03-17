@@ -25,7 +25,6 @@ grep -A 1 '_Unsorted' ./Filter/ABC_preliminary_total.faa | sed '/--/d' > $x.faa
 grep -E -A 1 "DroMel" ./Db_build_temp/Only_ABCs.faa | sed '/--/d' >> $x.faa
 ~/Applications/Custom_Applications/fasta_seq_len_filter.py $x.faa 300 10000 > $x'_length.faa'
 ~/Applications/Custom_Applications/hmmsearch_pfam_domain_parse.py -fasta $x'_length.faa' -table ./Filter/HMM_PF00005_output.tsv > $x'_length_NBD.faa'
-#~/Applications/Custom_Applications/ip_domain_extract.py $x'_length.faa' ./Filter/IPSCAN.tsv "PF00005" | sed 's/:/_/g' > $x'_length_NBD.faa'
 grep -A 1 -f ./Filter/preliminary/Quality_threshold_species.txt $x'_length_NBD.faa' | sed '/--/d' > $x'_length_NBD_species.faa'
 cat $x'_length_NBD_species.faa' | sed 's/\:/_/g' | sed 's/\-/_/g' | sed 's/\./_/g' > $x'_length_NBD_quality_clean.faa'
 ~/Applications/Custom_Applications/fasta_remove.py $x'_length_NBD_quality_clean.faa' ./ABC_REF/non_model_proteomes/bad_ABCs.txt > $x'_length_NBD_quality_clean_good.faa'

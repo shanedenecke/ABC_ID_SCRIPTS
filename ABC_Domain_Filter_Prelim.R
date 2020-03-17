@@ -18,7 +18,7 @@ args = commandArgs(trailingOnly=TRUE)
 thresh=as.numeric(args[1])
 
 ### Import key and metadata
-key=data.table(family=c(gsub('_','',readLines('./ABC_REF/Input_files/ABC_families.txt')),'ABC_Unsorted_'),domains=c(2,2,1,2,1,2,2,1,1,1))
+key=data.table(family=c(gsub('_','',readLines('./ABC_REF/Input_files/ABC_families.txt')),'ABC_Unsorted'),domains=c(2,2,1,2,1,2,2,1,1,1))
 metadata=fread('./ABC_REF/species_metadata/Arthropod_species_metadata.tsv',header=T) %>% 
   select(Species_name,abbreviation,taxid_code)
 
