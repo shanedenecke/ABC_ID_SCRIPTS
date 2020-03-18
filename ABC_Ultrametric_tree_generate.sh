@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-H='/data2/shane/Transporter_ID/ABC_id'
+H=~/Transporter_ID/ABC_id
 PHYLO=$H/ABC_REF/Input_files/Phylo_list.txt
 SPEC=$H/ABC_REF/Input_files/target_species.tsv
 QUAL_THRESH=.2
@@ -8,17 +8,16 @@ THREADS=14
 cd $H
 
 
-
-mkdir CAFE
 mkdir ./CAFE/Ultrametric_tree
 mkdir ./CAFE/species_lists
 
 
 
-for i in ./ABC_REF/CAFE/*; do
+for i in ./ABC_REF/CAFE/*.txt; do
   b=$(echo $(basename $i) | sed 's/.+CAFE.//g' | sed 's/_preliminary_species.txt//g')
   cp $i ./CAFE/species_lists/$b'_preliminary_species.txt'
-  grep -f ./Filter/Quality_cutoff_species.txt ./CAFE/species_lists/$b'_preliminary_species.txt' > ./CAFE/species_lists/$b'_final_species.txt'
+  #grep -f ./Filter/preliminary/Quality_threshold_taxid.txt ./CAFE/species_lists/$b'_preliminary_species.txt' > ./CAFE/species_lists/$b'_final_species.txt'
+  cat ./CAFE/species_lists/$b'_preliminary_species.txt' > ./CAFE/species_lists/$b'_final_species.txt'
 done
 
 
@@ -28,9 +27,9 @@ do
   b=$(echo $(basename $i) | sed 's/.+CAFE.//g' | sed 's/_final_species.txt//g')
   
   if [ $b = "Arthropod" ]; then
-    /data2/shane/Applications/custom/OrthoDB/one_to_one_ID_exec.py -node "Arthropod" -taxid $i -output seq
+    ~/Applications/Custom_Applications/one_to_one_ID_exec.py -node "Arthropod" -taxid $i -output seq
   else
-    /data2/shane/Applications/custom/OrthoDB/one_to_one_ID_exec.py -node "Arthropod" -taxid $i -output seq
+   ~/Applications/Custom_Applications/one_to_one_ID_exec.py -node "Arthropod" -taxid $i -output seq
   fi
   
   ### rename identified foler of sequences 
@@ -39,29 +38,28 @@ do
   
   
   ### perform alignments for all one to ones 
-  for x in  $fulltemp/*
+  for x in  $fulltemp/*.faa
   do
-    mafft --quiet --thread $THREADS $x > $x'.aln'
-    /data2/shane/Applications/trimAl/source/trimal -in $x'.aln' -out $x'.aln.trimm'
-    /data2/shane/Applications/custom/fasta_2_phylip.sh $x'.aln.trimm' | sed '1d' > $x'.aln.trimm.phy'
+    cat $x | sed 's/\./_/g' | mafft --quiet --thread $THREADS - > $x'.aln'
+    ~/Applications/trimAl/source/trimal -automated1 -in $x'.aln' -out $x'.aln.trimm'
+    ~/Applications/Custom_Applications/fasta_2_phylip.sh $x'.aln.trimm' | sed '1d' > $x'.aln.trimm.phy'
   done
   
   #### merge all phylip files
-  Rscript ./ABC_ID_SCRIPTS/ABC_Phylip_merge.R $fulltemp
+  Rscript ~/Applications/Custom_Applications/Phylip_merge.R $fulltemp > $fulltemp'/Full_species.phy'
   
   #### make trees 
-  if [ $b = "Arthropod" ]; then
-	#/data2/shane/Applications/raxml/raxmlHPC-PTHREADS-AVX -f a -x 12345 -p 12345 -N 100 -T $THREADS -m PROTGAMMAAUTO -s $fulltemp/Full_species.phy -n $b.tre -w $fulltemp
-  elif [ $b = 'Lepidopteran' ]; then
-	echo 'lep'
-	/data2/shane/Applications/raxml/raxmlHPC-PTHREADS-AVX -f a -x 12345 -p 12345 -N 100 -T $THREADS -m PROTGAMMAAUTO -s $fulltemp/Full_species.phy -n $b.tre -w $fulltemp -o 7029_0
+  if [ $b = 'Lepidopteran' ]; then
+    echo 'lep'
+    ~/Applications/raxml/raxmlHPC-PTHREADS-AVX -f a -x 12345 -p 12345 -N 100 -T $THREADS -m PROTGAMMAAUTO -s $fulltemp/Full_species.phy -n $b.tre -w $fulltemp -o 286706_0
   elif [ $b = "Hemipteran" ]; then
-	sed -i 's/J/A/g' $fulltemp/Full_species.phy
-	sed -i 's/\./A/g' $fulltemp/Full_species.phy
-	echo "Hemi"
-	/data2/shane/Applications/raxml/raxmlHPC-PTHREADS-AVX -f a -x 12345 -p 12345 -N 100 -T $THREADS -m PROTGAMMAAUTO -s $fulltemp/Full_species.phy -n $b.tre -w $fulltemp -o 7227_0
+    sed -i 's/J/A/g' $fulltemp/Full_species.phy
+    sed -i 's/\./A/g' $fulltemp/Full_species.phy
+    echo "Hemi"
+    ~/Applications/raxml/raxmlHPC-PTHREADS-AVX -f a -x 12345 -p 12345 -N 100 -T $THREADS -m PROTGAMMAAUTO -s $fulltemp/Full_species.phy -n $b.tre -w $fulltemp -o 7227_0
   elif [ $b = 'Diptera' ]; then
-	/data2/shane/Applications/raxml/raxmlHPC-PTHREADS-AVX -f a -x 12345 -p 12345 -N 100 -T $THREADS -m PROTGAMMAAUTO -s $fulltemp/Full_species.phy -n $b.tre -w $fulltemp
- fi
- cp $fulltemp'/RAxML_bipartitions.'$b'.tre' ./CAFE/clean_raxml_trees/
+    ~/Applications/raxml/raxmlHPC-PTHREADS-AVX -f a -x 12345 -p 12345 -N 100 -T $THREADS -m PROTGAMMAAUTO -s $fulltemp/Full_species.phy -n $b.tre -w $fulltemp
+  fi
+  
+  cp $fulltemp'/RAxML_bipartitions.'$b'.tre' ./CAFE/clean_raxml_trees/
 done

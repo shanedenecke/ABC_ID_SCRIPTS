@@ -14,16 +14,17 @@ shhh(library(ggplot2))
 
 ### Import key and metadata
 #setwd('/home/sdenecke/Transporter_ID/ABC_id')
-dir.create('./Filter/Final_transporters')
-dir.create('./Filter/Final_transporters/dicts')
-dir.create('./Filter/Final_transporters/proteomes')
-dir.create('./Filter/Total_combined')
+dir.create('./Filter/Final_transporters',showWarnings = F)
+dir.create('./Filter/Final_transporters/dicts',showWarnings = F)
+dir.create('./Filter/Final_transporters/proteomes',showWarnings = F)
+dir.create('./Filter/Total_combined',showWarnings = F)
 
 
-key=data.table(family=c(gsub('_','',readLines('./ABC_REF/Input_files/ABC_families.txt')),'ABC_Unsorted_'),domains=c(2,2,1,2,1,2,2,1,1,1))
+key=data.table(family=c(gsub('_','',readLines('./ABC_REF/Input_files/ABC_families.txt')),'ABC_Unsorted'),domains=c(2,2,1,2,1,2,2,1,1,1))
 metadata=fread('./ABC_REF/species_metadata/Arthropod_species_metadata.tsv',header=T) %>% 
   select(Species_name,abbreviation,taxid_code)
 good.species=readLines('./Filter/preliminary/Quality_threshold_species.txt')
+total.fasta=seqinr::read.fasta('./Filter/ABC_preliminary_total.faa',set.attributes = F,as.string = T,forceDNAtolower = F)
 ################ FUNCTIONS
 
 domain.annot=function(domain.table){
@@ -42,59 +43,11 @@ pfam.scan=fread('./Filter/HMM_PF00005_output_clean.tsv',select=c(1,3,20,21)) %>%
 pfam.scan$fam=gsub('^.+__(.+)__.+$','\\1',pfam.scan$name)
 pfam.table=pfam.scan %>% group_by(name,fam,len) %>% summarize(domains=length(name)) %>% filter(fam!="ABC_Unsorted_") %>% data.table()
 
-##############################################
-########## read and process unsorted tree
-#unsorted.tree=read.tree('./Filter/Unsorted_clean/RAxML_bipartitions.Unsorted.nwk')
-#collapsed.tree=di2multi4node(unsorted.tree,10)
-### mark drosophila as red
-#cols=rep('black',length=length(unsorted.tree$tip.label))
-#cols[grepl('DroMel',unsorted.tree$tip.label)]='red'
-#cols[grepl('TriCas',unsorted.tree$tip.label)]='blue'
-#gp=ggtree(unsorted.tree,size=2,layout='rectangular')
-#gp=gp+geom_tiplab(size=4,fontface='bold',color=cols)
-#gp=gp+geom_nodepoint(size=4,col='black')
-#gp=gp+geom_nodelab(hjust=1,vjust=.3,size=1.5,fontface='bold',col='white')
-#gp=gp+lims(x=c(0,20))
-#gp=gp+theme(title = element_text(size=12))
-#print(gp)
-#ggsave(plot=gp,filename ='./Filter/Unsorted_clean/Unosrted_ABC_phylogeny.pdf',device='pdf',height=40,width=30,limitsize = F)
-#ggsave(plot=gp,filename ='~/Dropbox/Unosrted_ABC_phylogeny.pdf',device='pdf',height=40,width=30,limitsize = F)
-
-
-#tbl=as_tibble(unsorted.tree)
-#dros.tips=unsorted.tree$tip.label[grepl('DroMel',unsorted.tree$tip.label)]
-#fams=dros.tips %>% gsub('DroMel__(ABC[A-Z]+)_.+$','\\1',.) %>% unique()
-
-
-#### manual
-#a.node=MRCA(tbl,dros.tips[grepl('ABCA',dros.tips)])$node
-#f.node=MRCA(tbl,'DroMel__ABCF__FBgn0030672_CG9281','CimLec__ABC_Unsorted___XP_0142575901')$node
-#g.node=MRCA(tbl,'DroMel__ABCG__FBgn0052091_CG32091','CimLec__ABC_Unsorted___XP_0142577721')$node
-#b.node=MRCA(tbl,'DroMel__ABCBF__FBgn0004513_Mdr65','HyaAzt__ABC_Unsorted___LOC108683648')$node
-#d.node=MRCA(tbl,'DroObs__ABC_Unsorted___LOC111067316','MenMol__ABC_Unsorted___1155016_002EAC')$node
-
-#l=list()
-#for(i in fams){
-#  sub=dros.tips[grepl(i,dros.tips)]
-#  fam.node=parent(tbl,MRCA(tbl,sub)$node)$node
-#  fam.tbl=offspring(tbl,fam.node) %>% filter(!grepl('DroMel',label) & grepl('[A-Z]',label))
-#  fam.genes=fam.tbl$label
-#  ip.sub=iptable[name %in% fam.genes]
-#  l[[i]]=ip.sub
-#}
-#unsorted.sum=rbindlist(l)
-
-
-############################################################
-#NEED TO CREATE IPTABLE WITH UNSORTED 
-# ALSO NEED TO RENAME FASTA FILE
-
-
 
 
 good.list=list()
-for(i in unique(iptable$fam)){
-  sub=iptable[fam==i]
+for(i in unique(pfam.table$fam)){
+  sub=pfam.table[fam==i]
   mins=key[family==i]$domains
   good.list[[i]]=sub[domains==mins]
 }

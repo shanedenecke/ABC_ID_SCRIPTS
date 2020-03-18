@@ -7,7 +7,7 @@ shhh(library(gplots))
 
 
 ############## Directories
-setwd('/data2/shane/Transporter_ID/ABC_id')
+setwd('~/Transporter_ID/ABC_id')
 dir.create('Final_outputs')
 dir.create('./Final_outputs/Group_Comparisons')
 dir.create('./Final_outputs/Group_Comparisons/ABC_plots')
@@ -42,13 +42,13 @@ full.counts$ABC_total=rowSums(select(full.counts,ABCA:ABCH))
 fwrite(full.counts,'./Final_outputs/Transposed_counts.csv')
 
 #### Copy files and dictionaries from Filter
-system('cp -r /data2/shane/Transporter_ID/ABC_id/Filter/Full_transporters/* /data2/shane/Transporter_ID/ABC_id/Final_outputs/')
-system('cat /data2/shane/Transporter_ID/ABC_id/Final_outputs/proteomes/* > /data2/shane/Transporter_ID/ABC_id/Final_outputs/proteomes/Combined_ABC_proteomes.faa')
+system('cp -r ~/Transporter_ID/ABC_id/Filter/Final_transporters/* ~/Transporter_ID/ABC_id/Final_outputs/')
+system('cat ~/Transporter_ID/ABC_id/Final_outputs/proteomes/* > ~/Transporter_ID/ABC_id/Final_outputs/Combined_ABC_proteomes.faa')
 dict.list=list()
-for(i in list.files('./Filter/Full_transporters/dicts',full.names = T)){
+for(i in list.files('./Final_outputs/dicts',full.names = T)){
   dict.list[[i]]=fread(i)
 }
-fwrite(rbindlist(dict.list),'./Final_outputs/dicts/Combined_total_dictionary.tsv',sep='\t')
+fwrite(rbindlist(dict.list),'./Final_outputs/Combined_total_dictionary.tsv',sep='\t')
 #### combine dictionaries
 
 
@@ -70,7 +70,7 @@ gp=gp+theme(text=element_text(face="bold",family="serif"),panel.grid=element_bla
             axis.title=element_text(size=17),axis.text.x=element_text(angle=45,hjust=1),
             legend.position = 'none',plot.title = element_text(hjust = 0.5))
 
-print(gp)
+#print(gp)
 ggsave(plot=gp,filename='./Final_outputs/Benchmark/Benchmark_graph.pdf')
 
 
@@ -129,7 +129,7 @@ fwrite(anova.filter,'./Final_outputs/Group_Comparisons/ABC_plots/ANOVA_table.csv
 #### Produce heatmap 
 
 #counts.summary$SLC_62=NULL
-m=full.counts %>% filter(abbreviation!='CaeEle' & abbreviation!='TetUrt') %>% data.table()
+m=full.counts %>% filter(abbreviation!='CaeEle') %>% data.table()
 
 
 groups=c('Hymenoptera','Coleoptera','Hemiptera','Lepidoptera','Diptera','Arachnida','Crustacea')
@@ -155,64 +155,24 @@ hm=heatmap.2(counts.matrix,Rowv=F,Colv=T,scale="row",col=colorpanel(75,'blue','g
 dev.off()
 
 
-
-
-
-
-
-
-
-#################### FIGURE 3
+#################### Histogram
 
 ## Figure 3
 
 
 #sub.size=total.counts[Species_name==sp.input.mod]$fam_size
-
-gp=ggplot(full.count,aes(x=SLC_total))
-gp=gp+geom_histogram(colour="black", fill="grey75",binwidth=20)
+gp=ggplot(full.counts,aes(x=ABC_total))
+gp=gp+geom_histogram(colour="black", fill="grey75",binwidth=5)
 gp=gp+geom_density(alpha=.2, fill="#FF6666")
-gp=gp+labs(x='\nTotal SLCs Identified in Species',y='Frequency\n')
+gp=gp+labs(x='\nTotal ABCs Identified in Species',y='Frequency\n')
 gp=gp+theme_bw()
 gp=gp+theme(text=element_text(face="bold",family="serif"),panel.grid=element_blank(),
             axis.ticks.x=element_line(),panel.border=element_rect(colour="black",fill=NA),
             axis.title=element_text(size=22),axis.text.x=element_text(size=18),
             legend.position = 'none',plot.title = element_text(hjust = 0.5))
-print(gp)
+#print(gp)
 
-ggsave(gp,file='./FigureS2_histogram.pdf',device='pdf',width=20,height=10,units='cm')
-
-##################### FIGURE 4 #####################
-counts.summary=full.count
-#counts.summary$SLC_62=NULL
-m=merge(counts.summary,co.var,by='abbreviation') %>% filter(abbreviation!='HomSap') %>% data.table()
-
-
-groups=c('Hymenoptera','Coleoptera','Hemiptera','Lepidoptera','Diptera','Arachnida','Crustacea')
-cols=c('firebrick2','blue4','magenta','green3','orange','mediumorchid3','gold3')
-#cols=pal_aaas('default')(7)
-
-names(groups)=cols
-final.cols=c()
-for(i in 1:nrow(m)){
-  g=m$Taxonomic_Classification[i]
-  
-  if(g %in% groups){
-    final.cols[i]=names(groups[which(groups==g)])
-  }else{
-    final.cols[i]='black'
-  }
-}
-counts.matrix=m %>% 
-  select(matches("SLC"),-matches('Unsorted'),-matches('Unsorted'),-SLC_total) %>%
-  as.matrix() %>% t()
-colnames(counts.matrix)=m$Species_name[m$Species_name!='Homo_sapiens']
-
-#par(mar=c(1,4,10,3)) 
-pdf('Figure3_heatmap.pdf',width=20,height=10)
-heatmap.2(counts.matrix,Rowv=F,Colv=T,scale="row",col=colorpanel(75,'blue','grey','red'),dendrogram = 'column',tracecol=NA,colCol = final.cols,margins = c(10,5),cexRow=.7,
-          density.info = 'density',denscol='black')
-dev.off()
+ggsave(gp,file='./Final_outputs/ABC_histogram.pdf',device='pdf',width=20,height=10,units='cm')
 
 
 

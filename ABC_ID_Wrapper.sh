@@ -27,17 +27,23 @@ done
 ###### Filter
 source ./ABC_ID_SCRIPTS/ABC_domain_filter.sh
 
-### phylogeny
-mkdir phylo
-mkdir ./phylo/clean_trees
-#source ./ABC_ID_SCRIPTS/ABC_phylo.sh ###################### NEED TO EDIT
-cp ./ABC_REF/phylo_premade/* ./phylo/clean_trees/
-
 #### CAFE
 mkdir CAFE
 mkdir ./CAFE/clean_raxml_trees
 
 #source ./ABC_ID_SCRIPTS/ABC_Ultrametric_tree_generate.sh
 cp ./ABC_REF/ultrametric_tree_backup/*.tre ./CAFE/clean_raxml_trees/
-
 Rscript ./ABC_ID_SCRIPTS/ABC_CAFE_prep.R
+source ./ABC_ID_SCRIPTS/ABC_CAFE_run_full.sh
+Rscript ./ABC_ID_SCRIPTS/ABC_CAFE_figures.R
+
+
+### phylogeny
+mkdir phylo
+mkdir ./phylo/clean_trees
+source ./ABC_ID_SCRIPTS/ABC_phylo.sh ###################### NEED TO EDIT
+#cp ./ABC_REF/phylo_premade/* ./phylo/clean_trees/
+
+
+
+

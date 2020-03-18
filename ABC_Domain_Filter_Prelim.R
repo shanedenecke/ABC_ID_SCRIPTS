@@ -10,7 +10,12 @@ shhh(library(seqinr))
 
 #### set up directories and args
 #setwd('~/Transporter_ID/ABC_id')
-dir.create('./Filter/preliminary')
+dir.create('./Filter/preliminary',showWarnings = F)
+dir.create('./Filter/Final_transporters',showWarnings = F)
+dir.create('./Filter/Final_transporters/dicts',showWarnings = F)
+dir.create('./Filter/Final_transporters/proteomes',showWarnings = F)
+dir.create('./Filter/Total_combined',showWarnings = F)
+
 
 ### Import arguments
 args = commandArgs(trailingOnly=TRUE)
@@ -72,11 +77,6 @@ for(i in unique(pfam.table$fam)){
 too.short=rbindlist(short.list) %>% filter(!grepl('Unsorted',name)) %>% domain.annot() %>% data.table()
 too.long=rbindlist(long.list) %>% filter(!grepl('Unsorted',name)) %>% domain.annot() %>% data.table()
 just.right=rbindlist(good.list) %>% filter(!grepl('Unsorted',name)) %>% domain.annot() %>% data.table()
-###### ADD in model species to good
-
-fwrite(too.short,'./Filter/preliminary/pelim_short.csv')
-fwrite(too.long,'./Filter/preliminary/pelim_long.csv')
-fwrite(just.right,'./Filter/preliminary/pelim_good.csv')
 
 ### get counts
 short.count.sp=too.short %>% count.fams() %>% group_by(species) %>% summarize(short.count=sum(count)) %>% data.table()
@@ -90,9 +90,22 @@ m=merge(short.count.sp,long.count.sp,by='species',all=T) %>%
   mutate(frac_bad=(short.count+long.count)/(short.count+long.count+good.count)) %>%
   data.table() 
 good.species=m[frac_bad<thresh]$species
-#quality.table=metadata %>% mutate(quality=ifelse(abbreviation %in% good.species,'Good','Bad'))
-
 quality.table=m %>% rename(abbreviation=species) %>% merge(metadata,by='abbreviation') 
+good.taxid=quality.table[frac_bad<thresh]$taxid_code
+
 
 fwrite(merge(quality.table,metadata,by='abbreviation'),'./Filter/preliminary/Quality_table.tsv',sep='\t')
 writeLines(good.species,'./Filter/preliminary/Quality_threshold_species.txt')
+writeLines(good.taxid,'./Filter/preliminary/Quality_threshold_taxid.txt')
+
+
+
+
+########### Final outputs
+
+fwrite(too.short,'./Filter/preliminary/pelim_short.csv')
+fwrite(too.long,'./Filter/preliminary/pelim_long.csv')
+fwrite(just.right,'./Filter/preliminary/pelim_good.csv')
+
+
+
