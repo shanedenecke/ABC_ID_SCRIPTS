@@ -8,6 +8,16 @@ shhh(library(stringr))
 shhh(library(seqinr))
 
 
+dir.create('./Filter',showWarnings = F)
+dir.create('./Final_outputs',showWarnings = F)
+dir.create('./Final_outputs/Combined_files',showWarnings = F)
+dir.create('./Final_outputs/proteomes',showWarnings = F)
+dir.create('./Final_outputs/dicts',showWarnings = F)
+
+
+#dir.create('./Final_outputs/',showWarnings = F)
+
+
 system('cat ./preliminary_ABC/proteomes/* > ./Filter/ABC_preliminary_total.faa')
 system('cat ./Db_build_temp/Only_ABCs.faa* >> ./Filter/ABC_preliminary_total.faa')
 system('hmmsearch --domtblout ./Filter/HMM_PF00005_output.tsv ./ABC_REF/Model_ABC_sets/ABC_tran.hmm ./Filter/ABC_preliminary_total.faa > ./Filter/hmm_junk.txt')
@@ -80,10 +90,10 @@ good.count.sp=just.right %>% count.fams() %>% group_by(species) %>% summarize(go
 quality.table=merge(short.count.sp,long.count.sp,by='species',all=T) %>% 
   merge(good.count.sp,by='species',all=T) %>%  replace(is.na(.), 0) %>% 
   mutate(frac_bad=(short.count+long.count)/(short.count+long.count+good.count)) %>%
-  rename(abbreviation=species) %>% merge(metadata,by='abbreviation')
+  rename(abbreviation=species) %>% merge(metadata,by='abbreviation') %>%
   data.table() 
 
-good.species=m[frac_bad<thresh]$species
+good.species=quality.table[frac_bad<thresh]$abbreviation
 good.taxid=quality.table[frac_bad<thresh]$taxid_code
 
 
@@ -91,4 +101,33 @@ fwrite(quality.table,'./Filter/Quality_table.tsv',sep='\t')
 writeLines(good.species,'./Filter/Quality_threshold_species.txt')
 writeLines(good.taxid,'./Filter/Quality_threshold_taxid.txt')
 
+
+########### Output good
+good.l=just.right %>% arrange(species) %>% group_split(species)
+for(i in 1:length(l)){
+  sp=good.l[[i]]$species[1]
+  fwrite(l[[i]],file=paste0('./Final_outputs/dicts/',sp,'_final_ABC_dict.csv'))
+  nam=l[[i]]$name
+  sub.fa=total.fasta[names(total.fasta) %in% nam]
+  write.fasta(sub.fa,names=names(sub.fa),file.out = paste0('./Final_outputs/proteomes/',sp,'_final.faa'))
+}
+
+
+######################### TOTAL OUTPUTS
+
+
+#### produce counts files
+good.sum=good %>% count.fams() %>% spread(key=species,value=count) %>%
+  data.table()
+good.sum[is.na(good.sum)]=0
+good.sum=data.table(fam=good.sum$fam,apply(select(good.sum,2:length(colnames(good.sum))),2,as.numeric)) 
+fwrite(good.sum,'./Final_outputs/Combined_files/Full_transporter_counts.csv') 
+
+
+#### write fasta
+abc.fasta=total.fasta[names(total.fasta) %in% good$name]
+write.fasta(abc.fasta,names=names(abc.fasta),file.out = './Final_outputs/Combined_files/Total_ABC.faa')
+
+### write dictionary
+fwrite(just.right,'./Final_outputs/Combined_files/Total_ABC_dict.csv')
 
