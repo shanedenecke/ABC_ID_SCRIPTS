@@ -8,12 +8,12 @@ shhh(library(tidyr))
 shhh(library(ggplot2))
 shhh(library(treeio))
 
+### set directories
+#setwd('~/Transporter_ID/ABC_id/')
+dir.create('./CAFE/CAFE_figures',showWarnings = F)
 
-setwd('~/Transporter_ID/ABC_id/')
-dir.create('./CAFE/CAFE_figures')
-
+#### Write CAFE count tables for each tre What are these used for?
 iter=list.files('./CAFE/CAFE_tables/') %>% gsub('_ABC_CAFE_table.tsv','',.)
-
 for(i in iter){
   ids=gsub("# Output format for: ' Average Expansion', 'Expansions', 'No Change', 'Contractions', and 'Branch-specific P-values' = (node ID, node ID): ",
            "",readLines(paste0('./CAFE/outputs/',i,'_ABC_cafe_output.cafe'))[5],fixed=T)
@@ -23,19 +23,19 @@ for(i in iter){
   cafe=fread(paste0('./CAFE/outputs/',i,'_ABC_cafe_output.cafe'),skip=11,sep='\t') %>% select(V1,V3,V4) %>% 
     filter(V3<.05) %>% separate(col=V4,into=ids2,sep='\\),\\(') %>%
     data.table()
-  
   fwrite(cafe,paste0('./CAFE/CAFE_figures/',i,'_CAFE.csv'))
 }
   
 
-group='Diptera'
-family='ABCA'
-node.annot = list(c('DroEre','DroBus'),
-                  c('CluMar','AnoCul'))
+#group='Diptera'
+#family='ABCA'
+#node.annot = list(c('DroEre','DroBus'),
+#                  c('CluMar','AnoCul'))
 
-label.annot=c('Drosophilid','Mosquito')          
-                  
-#ree.fig=function(raxtree,ultratree,fams.summary,counts,family){
+#label.annot=c('Drosophilid','Mosquito')          
+ 
+
+### tree.fig function                 
 tree.fig=function(group,family,node.annot='',label.annot=''){
   
   ##import ultrametric tree
@@ -79,11 +79,16 @@ tree.fig=function(group,family,node.annot='',label.annot=''){
   }
   
   ##Set scaling factors
-  ma=max(sapply(1:base.tree$Nnode,function(x) tbl[node %in% ancestor(base.tree,x)]$branch.length %>% sum(na.rm = T)))
-  #ma=tbl[node %in% ancestor(base.tree,2)]$branch.length %>% sum(na.rm = T)
-  xma=ma*1.4
-  ma.r=seq(0,round(ma,-2),by=50)
+  #ma=max(sapply(1:base.tree$Nnode,function(x) tbl[node %in% ancestor(base.tree,x)]$branch.length %>% sum(na.rm = T)))
+  #xma=ma*1.4
+  #ma.r=seq(0,round(ma,-2),by=50)
+  #diff=ma-round(ma,-2)
+  
+  ma=max(base.tree$edge.length)
+  xma=ma*1.3
+  ma.r=seq(0,round(ma,-2),by=100)
   diff=ma-round(ma,-2)
+  
   
   
   #### Make plot
@@ -94,13 +99,13 @@ tree.fig=function(group,family,node.annot='',label.annot=''){
   gp=gp+geom_nodelab(hjust=.75,size=8,fontface='bold',color='white')
   
   if(is.list(node.annot)){
-    final.annot=node.annot
-    names(final.annot)=label.annot
-    for(i in names(final.annot)){
-      final.annot[[i]][1]=tbl[grepl(final.annot[[i]][1],label)]$node %>% as.numeric()
-      final.annot[[i]][2]=tbl[grepl(final.annot[[i]][2],label)]$node %>% as.numeric()
-      plot.annot=final.annot[i]
-      gp=gp+geom_strip(taxa1=plot.annot[[i]][1],taxa2=plot.annot[[i]][2],offset.text=2,fontsize=10,
+    names(node.annot)=label.annot
+    plot.annot=vector("list",length=length(label.annot))
+    names(plot.annot)=label.annot
+    for(i in names(plot.annot)){
+      plot.annot[[i]][1]=tbl[grepl(node.annot[[i]][1],label)]$node %>% as.numeric()
+      plot.annot[[i]][2]=tbl[grepl(node.annot[[i]][2],label)]$node %>% as.numeric()
+      gp=gp+geom_strip(taxa1=plot.annot[[i]][1],taxa2=plot.annot[[i]][2],offset.text=4,fontsize=10,
                        barsize=5,color='black',label=i,offset=ma/6.5)
     }
   }
@@ -114,7 +119,7 @@ tree.fig=function(group,family,node.annot='',label.annot=''){
 
 dros.a=tree.fig(group = 'Diptera',family = 'ABCA',node.annot = list(c('DroEre','DroBus'),c('CluMar','AnoCul')),
          label.annot=c('Drosophilid','Mosquito'))
-ggsave(plot=dros.a,filename='./CAFE/CAFE_figures/Drosophila_ABCA.pdf',device='pdf',width=20,height=15)
+ggsave(plot=dros.a,filename='./CAFE/CAFE_figures/Drosophila_ABCA.pdf',device='pdf',width=25,height=15)
 
 
 hemi.h=tree.fig(group = 'Hemipteran',family = 'ABCH',node.annot = list(c('BomMor','DroMel'),c('MyzPer','AphGly')),

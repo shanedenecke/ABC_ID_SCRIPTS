@@ -8,13 +8,13 @@ shhh(library(tidyr))
 shhh(library(ggplot2))
 
 
-setwd('~/Transporter_ID/ABC_id')
-used.species=readLines('./Filter/preliminary/Quality_threshold_species.txt')
+#setwd('~/Transporter_ID/ABC_id')
+used.species=readLines('./Filter/Quality_threshold_species.txt')
 dir.create('./CAFE',showWarnings = F)
 dir.create('./CAFE/CAFE_tables',showWarnings = F)
 
 ### Import data
-abc.counts=fread('./Filter/Total_combined/Full_transporter_counts.csv')
+abc.counts=fread('./Final_outputs/Combined_files/ABC_transporter_counts.csv')
 metadata=fread('./ABC_REF/species_metadata/Arthropod_species_metadata.tsv',header=T) %>% 
   select(Species_name,abbreviation,taxid_code) %>% filter(abbreviation %in% used.species) %>% data.table()
 
@@ -29,20 +29,14 @@ lambda.convert=function(x){
 
 ### format table for CAFE
 colnames(abc.counts)[1]='Family ID'
-#abc.counts$`Family ID`=gsub('_','',abc.counts$`Family ID`)
 abc.counts$Desc='(null)'
-#trans.counts=rbindlist(list(trans.counts,sup.counts),use.names = T,fill=T)
 abc.counts=select(abc.counts,Desc,'Family ID',metadata$abbreviation)
-
 fwrite(abc.counts,'./CAFE/ABC_COUNTS_CAFE_FULL.tsv',sep='\t')
 
 
 ### create list of tree base names
 iter=list.files('./CAFE/clean_raxml_trees')[grepl('RAxML_bipartitions.',list.files('./CAFE/clean_raxml_trees'))] %>%
   str_remove('RAxML_bipartitions.') %>% str_remove('.tre')
-
-#iter=list.files('./ABC_REF/ultrametric_tree_backup/')[grepl('RAxML_bipartitions.',list.files('./ABC_REF/ultrametric_tree_backup/'))] %>%
-#  str_remove('RAxML_bipartitions.') %>% str_remove('.tre')
 
 
 
@@ -51,7 +45,6 @@ for (i in iter){
   
   ### rename tree
   rax.tree=readLines(paste0('./CAFE/clean_raxml_trees/RAxML_bipartitions.',i,'.tre'))
-  #rax.tree=readLines(paste0('./ABC_REF/ultrametric_tree_backup/RAxML_bipartitions.',i,'.tre'))
   for(j in metadata$taxid_code){
     if(grepl(j,rax.tree)){
       rax.tree=gsub(j,metadata[taxid_code==j]$abbreviation,rax.tree)
@@ -61,9 +54,13 @@ for (i in iter){
   
   ## read in named raxmL tree
   tr=read.tree(paste0('./CAFE/clean_raxml_trees/raxml_tree_named_',i,'.tre'))
-  tr=drop.tip(tr,tr$tip.label[grepl('[0-9]+_0',tr$tip.label)])
-  if(i=='Diptera'){tr=drop.tip(tr,'BomMor')}
   
+  ### Remove tips which are not in final dataset
+  tr=drop.tip(tr,tr$tip.label[grepl('[0-9]+_0',tr$tip.label)])
+  #if(i=='Diptera'){tr=drop.tip(tr,'BomMor')}
+  
+  
+  ### Import calibrations for various nodes
   nodes <- c(); maxes=c()
   maxes=c()
   mins=c()
@@ -82,14 +79,15 @@ for (i in iter){
   mycalibration <- makeChronosCalib(tr, node=c(nodes), age.min=mins,age.max=maxes)
   mytimetree <- chronos(tr, lambda = 1, model = "correlated", calibration = mycalibration)
   num=mytimetree$node.label %>% as.numeric()
-  #mytimetree$node.label=NULL
-  #mytimetree$edge.length=round(mytimetree$edge.length)
   write.tree(mytimetree, file=paste0("./CAFE/clean_raxml_trees/",i,'_tree_ultrametric.tre'))
   
+  ### write ultrametric tree without nodelabels for CAFE processing. CAFE python script will not work without this
+  mytimetree.nolab=mytimetree
+  mytimetree.nolab$node.label=NULL
+  write.tree(mytimetree.nolab, file=paste0("./CAFE/clean_raxml_trees/",i,'_tree_ultrametric_nolab.tre'))
   
-  #### Plot tree
+  #### Prepare tree to plot
   plot.tree=read.tree(paste0("./CAFE/clean_raxml_trees/",i,'_tree_ultrametric.tre'))
-  
   cols=c()
   for(j in num){
     if(is.na(j)){cols=c(cols,'black')
@@ -97,14 +95,12 @@ for (i in iter){
     }else if(j>50){cols=c(cols,'blue4')
     }else{cols=c(cols,'red')}
   }
-  
   ma=max(mytimetree$edge.length)
   xma=ma+75
   ma.r=seq(0,round(ma,-2),by=100)
-  
   diff=ma-round(ma,-2)
   
-  #pdf(paste0("./CAFE/clean_raxml_trees/",i,'_tree_ultrametric.pdf'),width=14,height=7)
+  ### make plot 
   gp=ggtree(plot.tree)#, mrsd = "2010-01-01")
   gp=gp+geom_tiplab(size=6)
   gp=gp+geom_nodepoint(size=5,col=cols)
@@ -112,27 +108,17 @@ for (i in iter){
   gp=gp+theme_tree2()
   gp=gp+theme(axis.text.x=element_text(size=20,face='bold',color = 'black'))
   gp=gp+scale_x_continuous(breaks=diff+ma.r,labels=as.character(rev(ma.r)),limits=c(0,xma))
-  #print(gp)
-  #dev.off()
   
   ggsave(paste0("./CAFE/clean_raxml_trees/",i,'_tree_ultrametric.pdf'),plot=gp,width=14,height=10)
   
-  #l.tree.ch=chronopl(read.tree(paste0(paste0(H,'CAFE/trees/raxml_tree_named_',i,'.tre')), lambda=0.1)
-  #l.tree.ch$edge.length=l.tree.ch$edge.length*1000
-  #l.tree.ch$node.label=NULL
-  #write.tree(l.tree.ch, file=paste0("./CAFE/clean_raxml_trees/",i,'_tree_ultrametric.tre'))
   
   ## create lambda file
   writeLines(lambda.convert(readLines(paste0("./CAFE/clean_raxml_trees/",i,'_tree_ultrametric.tre'))),paste0("./CAFE/clean_raxml_trees/",i,'_tree_lambda.txt')) 
   
-  
   sp=str_extract_all(readLines(paste0("./CAFE/clean_raxml_trees/",i,'_tree_ultrametric.tre')),pattern = "[A-z]+",simplify = T) %>% as.character()
-  #sp_clean=sp[sp='_']
   
   sp.counts=abc.counts %>% select(c('Desc','Family ID',sp))
   fwrite(sp.counts,paste0('./CAFE/CAFE_tables/',i,'_ABC_CAFE_table.tsv'),sep='\t')
-  #orthodb.counts=orthodb.final %>% select(c('Desc','Family ID',sp))
-  #fwrite(orthodb.counts,paste0('./CAFE/CAFE_tables/',i,'_OrthoDB_CAFE_table.tsv'),sep='\t')
 }
 
 

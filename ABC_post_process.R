@@ -8,11 +8,8 @@ shhh(library(gplots))
 
 ############## Directories
 setwd('~/Transporter_ID/ABC_id')
-dir.create('Final_outputs')
-dir.create('./Final_outputs/Group_Comparisons')
-dir.create('./Final_outputs/Group_Comparisons/ABC_plots')
-dir.create('./Final_outputs/Benchmark')
-dir.create('./Final_outputs/ABC_fasta')
+dir.create('./Final_outputs/Figures_Tables',showWarnings = F)
+dir.create('./Final_outputs/Figures_Tables/ABC_plots',showWarnings = F)
 
 ############## Functions
 shane.transpose=function(dt,newcol){
@@ -24,41 +21,24 @@ shane.transpose=function(dt,newcol){
   return(b)
 }
 
-#### common variables
+#### Import common datasets
 meta=fread('./ABC_REF/species_metadata/Arthropod_species_metadata.tsv')
 counts=fread('./CAFE/ABC_COUNTS_CAFE_FULL.tsv') %>% select(-Desc) %>% rename(fam=`Family ID`)
 benchmark.raw=fread('./ABC_REF/species_metadata/ABC_benchmark_counts.csv') %>% select(-Order)
 
-
-
-##### Write out summary dictionaries and files
-
-
-#### Counts
+#### Counts table transposed. Maybe port over to Domain filter new. No new data incorporated and a bit redundant
 trans=shane.transpose(counts,fam) %>% rename(abbreviation=newcol)
 full.counts=merge(meta,trans,by='abbreviation') %>% select(-Common_name) %>% data.table()
 full.counts=data.table(select(full.counts,abbreviation:Vory),apply(select(full.counts,ABCA:ABCH),2,as.numeric))
 full.counts$ABC_total=rowSums(select(full.counts,ABCA:ABCH))
-fwrite(full.counts,'./Final_outputs/Transposed_counts.csv')
-
-#### Copy files and dictionaries from Filter
-system('cp -r ~/Transporter_ID/ABC_id/Filter/Final_transporters/* ~/Transporter_ID/ABC_id/Final_outputs/')
-system('cat ~/Transporter_ID/ABC_id/Final_outputs/proteomes/* > ~/Transporter_ID/ABC_id/Final_outputs/Combined_ABC_proteomes.faa')
-dict.list=list()
-for(i in list.files('./Final_outputs/dicts',full.names = T)){
-  dict.list[[i]]=fread(i)
-}
-fwrite(rbindlist(dict.list),'./Final_outputs/Combined_total_dictionary.tsv',sep='\t')
-#### combine dictionaries
-
-
+fwrite(full.counts,'./Final_outputs/Combined_files/Transposed_counts.csv')
 
 ################# Benchmarking against known datasets 
 merged.benchmark=select(full.counts,Species_name,ABC_total) %>% merge(benchmark.raw,by='Species_name') %>% rename(ABC_This_Study=ABC_total)
 merged.benchmark$Difference=merged.benchmark$ABC_This_Study-merged.benchmark$Lit_ABC_count
 merged.benchmark$Percent_Difference=merged.benchmark$Difference/merged.benchmark$ABC_This_Study
 
-
+##Plot benchmark data
 gp=ggplot(merged.benchmark,aes(x=Species_name,y=Percent_Difference))
 gp=gp+geom_bar(stat='identity')
 gp=gp+geom_hline(yintercept=0,linetype=1,size=2,color='red')
@@ -71,7 +51,7 @@ gp=gp+theme(text=element_text(face="bold",family="serif"),panel.grid=element_bla
             legend.position = 'none',plot.title = element_text(hjust = 0.5))
 
 #print(gp)
-ggsave(plot=gp,filename='./Final_outputs/Benchmark/Benchmark_graph.pdf')
+ggsave(plot=gp,filename='./Final_outputs/Figures_Tables/Benchmark_graph.pdf')
 
 
 
@@ -87,7 +67,6 @@ for(i in iter.i){
     good=names(table(full.counts[[j]]))[table(full.counts[[j]])>5]
     sub=full.counts[full.counts[[j]] %in% good]
     
-    
     ### Make ggplot
     gp=ggplot(data=sub,aes_string(x=j,y=i,fill=j))
     gp=gp+geom_boxplot(outlier.size=1)
@@ -100,8 +79,7 @@ for(i in iter.i){
                 legend.position = 'none',plot.title = element_text(hjust = 0.5))
     
     #print(gp)
-    ggsave(filename=paste0('./Final_outputs/Group_Comparisons/ABC_plots/',i,'_',j,'.png'),gp,device='png',height=7,width=7)
-    
+    ggsave(filename=paste0('./Final_outputs/Figures_Tables/ABC_plots/',i,'_',j,'.png'),gp,device='png',height=7,width=7)
     
     ##### ANOVA
     model=aov(formula=sub[[i]]~sub[[j]])
@@ -117,13 +95,11 @@ for(i in iter.i){
   }
 }
 
-
-
 anova.summary=rbindlist(anova.l)  
 anova.summary$bonf=p.adjust(anova.summary$pval,method='bonferroni') 
 anova.filter=anova.summary %>% arrange(bonf) %>% filter(bonf<1e-2)  %>% data.table()
 anova.distinct=anova.filter %>% select(family,co_variable) %>% unique.data.frame()
-fwrite(anova.filter,'./Final_outputs/Group_Comparisons/ABC_plots/ANOVA_table.csv')
+fwrite(anova.filter,'./Final_outputs/Figures_Tables/ANOVA_table.csv')
 
 
 #### Produce heatmap 
@@ -147,7 +123,7 @@ counts.matrix=m %>%
   as.matrix() %>% t()
 colnames(counts.matrix)=m$Species_name
 
-pdf('./Final_outputs/Group_Comparisons/ABC_heatmap.pdf',width=20,height=10)
+pdf('./Final_outputs/Figures_Tables/ABC_heatmap.pdf',width=20,height=10)
 hm=heatmap.2(counts.matrix,Rowv=F,Colv=T,scale="row",col=colorpanel(75,'blue','grey','red'),
              dendrogram = 'column',tracecol=NA,
              colCol = final.cols,margins = c(10,8),cexRow=1.5,
@@ -158,9 +134,6 @@ dev.off()
 #################### Histogram
 
 ## Figure 3
-
-
-#sub.size=total.counts[Species_name==sp.input.mod]$fam_size
 gp=ggplot(full.counts,aes(x=ABC_total))
 gp=gp+geom_histogram(colour="black", fill="grey75",binwidth=5)
 gp=gp+geom_density(alpha=.2, fill="#FF6666")
@@ -172,7 +145,7 @@ gp=gp+theme(text=element_text(face="bold",family="serif"),panel.grid=element_bla
             legend.position = 'none',plot.title = element_text(hjust = 0.5))
 #print(gp)
 
-ggsave(gp,file='./Final_outputs/ABC_histogram.pdf',device='pdf',width=20,height=10,units='cm')
+ggsave(gp,file='./Final_outputs/Figures_Tables/ABC_histogram.pdf',device='pdf',width=20,height=10,units='cm')
 
 
 
