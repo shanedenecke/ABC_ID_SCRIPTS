@@ -2,7 +2,7 @@
 H=~/Transporter_ID/ABC_id
 PHYLO=$H/ABC_REF/Input_files/Phylo_list.txt
 SPEC=$H/ABC_REF/Input_files/target_species.tsv
-QUAL_THRESH=0
+QUAL_THRESH=1
 THREADS=14
 
 cd $H
@@ -21,21 +21,21 @@ mkdir preliminary_ABC/dicts
 for i in ./proteomes/*; do
   source ./ABC_ID_SCRIPTS/ABC_search_join.sh $i
 done
-  
-  ###### 4)Filter based on number of NBDs
-  Rscript ./ABC_ID_SCRIPTS/ABC_domain_filter_new.R $QUAL_THRESH
-  
-  ###### 5) CAFE
-  mkdir CAFE
-  mkdir ./CAFE/clean_raxml_trees
-  #source ./ABC_ID_SCRIPTS/ABC_Ultrametric_tree_generate.sh
-  cp ./ABC_REF/ultrametric_tree_backup/*.tre ./CAFE/clean_raxml_trees/
-  Rscript ./ABC_ID_SCRIPTS/ABC_CAFE_prep.R
-  source ./ABC_ID_SCRIPTS/ABC_CAFE_run_full.sh
-  Rscript ./ABC_ID_SCRIPTS/ABC_CAFE_figures.R
-  
-  ###### 6) Produce Figures and Tables
-  Rscript ./ABC_ID_SCRIPTS/ABC_post_process.R
+
+###### 4)Filter based on number of NBDs
+Rscript ./ABC_ID_SCRIPTS/ABC_domain_filter_new.R $QUAL_THRESH
+
+###### 5) CAFE
+mkdir CAFE
+mkdir ./CAFE/clean_raxml_trees
+#source ./ABC_ID_SCRIPTS/ABC_Ultrametric_tree_generate.sh
+cp ./ABC_REF/ultrametric_tree_backup/*.tre ./CAFE/clean_raxml_trees/
+Rscript ./ABC_ID_SCRIPTS/ABC_CAFE_prep.R
+source ./ABC_ID_SCRIPTS/ABC_CAFE_run_full.sh
+Rscript ./ABC_ID_SCRIPTS/ABC_CAFE_figures.R
+
+###### 6) Produce Figures and Tables
+Rscript ./ABC_ID_SCRIPTS/ABC_post_process.R
   
 
 ### 7) Make phylogeny for relevant species 

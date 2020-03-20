@@ -104,10 +104,10 @@ writeLines(good.taxid,'./Filter/Quality_threshold_taxid.txt')
 
 ########### Output good
 good.l=just.right %>% arrange(species) %>% group_split(species)
-for(i in 1:length(l)){
+for(i in 1:length(good.l)){
   sp=good.l[[i]]$species[1]
-  fwrite(l[[i]],file=paste0('./Final_outputs/dicts/',sp,'_final_ABC_dict.csv'))
-  nam=l[[i]]$name
+  fwrite(good.l[[i]],file=paste0('./Final_outputs/dicts/',sp,'_final_ABC_dict.csv'))
+  nam=good.l[[i]]$name
   sub.fa=total.fasta[names(total.fasta) %in% nam]
   write.fasta(sub.fa,names=names(sub.fa),file.out = paste0('./Final_outputs/proteomes/',sp,'_final.faa'))
 }
@@ -117,15 +117,15 @@ for(i in 1:length(l)){
 
 
 #### produce counts files
-good.sum=good %>% count.fams() %>% spread(key=species,value=count) %>%
+good.sum=just.right %>% count.fams() %>% spread(key=species,value=count) %>%
   data.table()
 good.sum[is.na(good.sum)]=0
 good.sum=data.table(fam=good.sum$fam,apply(select(good.sum,2:length(colnames(good.sum))),2,as.numeric)) 
-fwrite(good.sum,'./Final_outputs/Combined_files/Full_transporter_counts.csv') 
+fwrite(good.sum,'./Final_outputs/Combined_files/ABC_transporter_counts.csv') 
 
 
 #### write fasta
-abc.fasta=total.fasta[names(total.fasta) %in% good$name]
+abc.fasta=total.fasta[names(total.fasta) %in% just.right$name]
 write.fasta(abc.fasta,names=names(abc.fasta),file.out = './Final_outputs/Combined_files/Total_ABC.faa')
 
 ### write dictionary
