@@ -59,7 +59,7 @@ count.fams=function(x){
 ### Parse IPscan
 pfam.scan=fread('./Filter/HMM_PF00005_output_clean.tsv',select=c(1,3,20,21)) %>% rename(name=V1,len=V3,start=V20,end=V21)
 pfam.scan$fam=gsub('^.+__(.+)__.+$','\\1',pfam.scan$name)
-pfam.table=pfam.scan %>% group_by(name,fam,len) %>% summarize(domains=length(name)) %>% data.table()
+pfam.table=pfam.scan %>% group_by(name,fam,len) %>% summarize(domains=length(name)) %>% filter(fam!='ABC_Unsorted') %>% data.table()
 
 #### sort into categories
 short.list=list()
@@ -72,9 +72,9 @@ for(i in unique(pfam.table$fam)){
   good.list[[i]]=sub[domains==mins]
   long.list[[i]]=sub[domains>mins]
 }
-too.short=rbindlist(short.list) %>% filter(!grepl('Unsorted',name)) %>% domain.annot() %>% data.table()
-too.long=rbindlist(long.list) %>% filter(!grepl('Unsorted',name)) %>% domain.annot() %>% data.table()
-just.right=rbindlist(good.list) %>% filter(!grepl('Unsorted',name)) %>% domain.annot() %>% data.table()
+too.short=rbindlist(short.list) %>% domain.annot() %>% data.table()
+too.long=rbindlist(long.list) %>% domain.annot() %>% data.table()
+just.right=rbindlist(good.list) %>% domain.annot() %>% data.table()
 
 
 ### get counts
