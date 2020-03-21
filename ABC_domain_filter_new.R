@@ -7,15 +7,12 @@ shhh(library(readr))
 shhh(library(stringr))
 shhh(library(seqinr))
 
-
+#setwd('~/Transporter_ID/ABC_id/')
 dir.create('./Filter',showWarnings = F)
 dir.create('./Final_outputs',showWarnings = F)
 dir.create('./Final_outputs/Combined_files',showWarnings = F)
 dir.create('./Final_outputs/proteomes',showWarnings = F)
 dir.create('./Final_outputs/dicts',showWarnings = F)
-
-
-#dir.create('./Final_outputs/',showWarnings = F)
 
 
 system('cat ./preliminary_ABC/proteomes/* > ./Filter/ABC_preliminary_total.faa')
@@ -35,7 +32,7 @@ key=data.table(family=c(gsub('_','',readLines('./ABC_REF/Input_files/ABC_familie
 metadata=fread('./ABC_REF/species_metadata/Arthropod_species_metadata.tsv',header=T) %>% 
   select(Species_name,abbreviation,taxid_code)
 total.fasta=seqinr::read.fasta('./Filter/ABC_preliminary_total.faa',set.attributes = F,as.string = T,forceDNAtolower = F)
-
+n50=fread('./ABC_REF/species_metadata/i5k_n50.csv')
 
 ################ FUNCTIONS
 
@@ -91,10 +88,14 @@ quality.table=merge(short.count.sp,long.count.sp,by='species',all=T) %>%
   merge(good.count.sp,by='species',all=T) %>%  replace(is.na(.), 0) %>% 
   mutate(frac_bad=(short.count+long.count)/(short.count+long.count+good.count)) %>%
   rename(abbreviation=species) %>% merge(metadata,by='abbreviation') %>%
+  merge(n50,by='Species_name',all.x=T) %>%
   data.table() 
 
-good.species=quality.table[frac_bad<thresh]$abbreviation
-good.taxid=quality.table[frac_bad<thresh]$taxid_code
+#q2=quality.table[frac_bad<.4 & (N50>50000 | is.na(N50))]
+q2=quality.table[frac_bad<thresh]
+
+good.species=q2[frac_bad<thresh]$abbreviation
+good.taxid=q2[frac_bad<thresh]$taxid_code
 
 
 fwrite(quality.table,'./Filter/Quality_table.tsv',sep='\t')
