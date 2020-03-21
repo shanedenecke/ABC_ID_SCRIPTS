@@ -72,8 +72,6 @@ for (i in iter){
   if(("TetUrt" %in% tr$tip.label) & ("DroMel" %in% tr$tip.label)){nodes=c(nodes,getMRCA(tr, tip = c("TetUrt","DroMel")));maxes=c(maxes,579);mins=c(mins,539)}
   if(("PluXyl" %in% tr$tip.label) & ("BomMor" %in% tr$tip.label)){nodes=c(nodes,getMRCA(tr, tip = c("PluXyl","BomMor")));maxes=c(maxes,178);mins=c(mins,116)} ## has fossil
   if(("DroMel" %in% tr$tip.label) & ("BomMor" %in% tr$tip.label)){nodes=c(nodes,getMRCA(tr, tip = c("DroMel","BomMor")));maxes=c(maxes,328);mins=c(mins,224)} ## has fossil
-  
-  
   ## create ultrametric tree
   ### Credit to Alex SL for format https://phylobotanist.blogspot.com/2019/
   mycalibration <- makeChronosCalib(tr, node=c(nodes), age.min=mins,age.max=maxes)
