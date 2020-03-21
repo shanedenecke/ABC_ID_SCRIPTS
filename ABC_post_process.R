@@ -3,6 +3,7 @@ shhh(library(dplyr))
 shhh(library(data.table))
 shhh(library(ggplot2))
 shhh(library(gplots))
+shhh(library(ggsci))
 
 
 
@@ -21,6 +22,11 @@ shane.transpose=function(dt,newcol){
   return(b)
 }
 
+formatter <- function(...){
+  function(x) format(round(x, 0), ...)
+}
+
+
 #### Import common datasets
 meta=fread('./ABC_REF/species_metadata/Arthropod_species_metadata.tsv')
 counts=fread('./CAFE/ABC_COUNTS_CAFE_FULL.tsv') %>% select(-Desc) %>% rename(fam=`Family ID`)
@@ -32,6 +38,7 @@ full.counts=merge(meta,trans,by='abbreviation') %>% select(-Common_name) %>% dat
 full.counts=data.table(select(full.counts,abbreviation:Vory),apply(select(full.counts,ABCA:ABCH),2,as.numeric))
 full.counts$ABC_total=rowSums(select(full.counts,ABCA:ABCH))
 fwrite(full.counts,'./Final_outputs/Combined_files/Transposed_counts.csv')
+
 
 ################# Benchmarking against known datasets 
 merged.benchmark=select(full.counts,Species_name,ABC_total) %>% merge(benchmark.raw,by='Species_name') %>% rename(ABC_This_Study=ABC_total)
@@ -100,6 +107,45 @@ anova.summary$bonf=p.adjust(anova.summary$pval,method='bonferroni')
 anova.filter=anova.summary %>% arrange(bonf) %>% filter(bonf<1e-2)  %>% data.table()
 anova.distinct=anova.filter %>% select(family,co_variable) %>% unique.data.frame()
 fwrite(anova.filter,'./Final_outputs/Figures_Tables/ANOVA_table.csv')
+
+
+#### Make count variation graph
+count.plot=select(full.counts,abbreviation,Taxonomic_Classification,ABCA:ABCH) %>% 
+  group_by(Taxonomic_Classification) %>%
+  filter(n()>7) %>% data.table() %>% 
+  ### select for relevant columsn
+  melt(id.vars=c('abbreviation','Taxonomic_Classification'),measure.vars=patterns("ABC"), ###Melt data frame to have family and size be measurements
+       variable.name='ABC_Family',value.name='Family_Size') %>%  ### remove taxonomic groups with fewer than 30 total events (fam x species). Generally under 5 species
+  filter(ABC_Family %in% anova.distinct$family) %>% ### only variable families
+  data.table()
+
+
+gp=ggplot(count.plot,aes(x=Taxonomic_Classification,y=Family_Size,fill=Taxonomic_Classification))
+#gp=gp+geom_dotplot(binaxis = 'y',stackdir='center',binwidth=1.5,color='black',dotsize=.3)
+gp=gp+geom_boxplot()
+#gp=gp+geom_bar(position='stack',stat='identity')
+gp=gp+facet_wrap(vars(ABC_Family),nrow=2,ncol=2,scales='free')
+gp=gp+ggtitle('Family Size Variation Across Lineages')
+gp=gp+labs(x='\nABC Family',y='Family Size\n')
+gp=gp+scale_y_continuous(labels = formatter(nsmall = 0))
+gp=gp+theme_bw()
+gp=gp+scale_fill_npg()
+gp=gp+theme(text=element_text(face="bold",family="serif"),panel.grid=element_blank(),
+            axis.ticks.x=element_line(),panel.border=element_rect(colour="black",fill=NA),
+            strip.text=element_text(size=20),strip.background=element_rect("white"),
+            axis.title=element_text(size=24),axis.text.y=element_text(size=14),
+            axis.text.x=element_text(size=10),
+            legend.position = 'none',
+            plot.title = element_text(hjust = 0.5))
+
+print(gp)
+ggsave(plot=gp,filename='./Final_outputs/Figures_Tables/Family_Size_Dotplot.pdf',width=12,height=8)
+
+
+
+
+
+
 
 
 #### Produce heatmap 
