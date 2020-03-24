@@ -7,8 +7,16 @@ THREADS=14
 
 cd $H
 
-#### CAFE
-mkdir CAFE
-mkdir ./CAFE/clean_raxml_trees
 
-source ./ABC_ID_SCRIPTS/ABC_Ultrametric_tree_generate.sh
+###### 2) Build database materials
+source ./ABC_ID_SCRIPTS/ABC_Model_database_build_join.sh
+
+
+###### 3) Search proteomes
+mkdir ABC_search
+mkdir preliminary_ABC
+mkdir preliminary_ABC/proteomes
+mkdir preliminary_ABC/dicts
+for i in ./proteomes/*; do
+  source ./ABC_ID_SCRIPTS/ABC_search_join.sh $i
+done

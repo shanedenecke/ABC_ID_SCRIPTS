@@ -7,7 +7,7 @@ shhh(library(readr))
 shhh(library(stringr))
 shhh(library(seqinr))
 
-#setwd('~/Transporter_ID/ABC_id/')
+setwd('~/Transporter_ID/ABC_id/')
 dir.create('./Filter',showWarnings = F)
 dir.create('./Final_outputs',showWarnings = F)
 dir.create('./Final_outputs/Combined_files',showWarnings = F)
@@ -24,7 +24,7 @@ system('cat ./Filter/HMM_PF00005_output.tsv | tail -n +4 | head -n -10 > ./Filte
 ### Import arguments
 args = commandArgs(trailingOnly=TRUE)
 #args[1]=.3
-thresh=as.numeric(args[1])
+#thresh=as.numeric(args[1])
 
 
 ### Import key and metadata
@@ -34,6 +34,7 @@ metadata=fread('./ABC_REF/species_metadata/Arthropod_species_metadata.tsv',heade
   select(Species_name,abbreviation,taxid_code)
 total.fasta=seqinr::read.fasta('./Filter/ABC_preliminary_total.faa',set.attributes = F,as.string = T,forceDNAtolower = F)
 n50=fread('./ABC_REF/species_metadata/i5k_n50.csv')
+busco=fread('./BUSCO/BUSCO_final_summary.tsv') %>% rename(abbreviation=Species)
 
 ################ FUNCTIONS
 
@@ -70,12 +71,12 @@ for(i in unique(pfam.table$fam)){
   sub=pfam.table[fam==i]
   dom.max=key[family==i]$maxes
   dom.min=key[family==i]$min
-  short.list[[i]]=sub[dom.min<mins & len<150]
-  good.list[[i]]=sub[domains==mins & len>150]
+  short.list[[i]]=sub[domains<dom.min | len<150]
+  good.list[[i]]=sub[domains>=dom.min & len>150]
   #long.list[[i]]=sub[domains>mins]
 }
 too.short=rbindlist(short.list) %>% domain.annot() %>% data.table()
-too.long=rbindlist(long.list) %>% domain.annot() %>% data.table()
+#too.long=rbindlist(long.list) %>% domain.annot() %>% data.table()
 just.right=rbindlist(good.list) %>% domain.annot() %>% data.table()
 
 
@@ -86,17 +87,19 @@ good.count.sp=just.right %>% count.fams() %>% group_by(species) %>% summarize(go
 
 
 ##### Quality cutoff
-quality.table=merge(short.count.sp,good.count,by='species',all=T) %>% replace(is.na(.), 0) %>% 
+quality.table=merge(short.count.sp,good.count.sp,by='species',all=T) %>% replace(is.na(.), 0) %>% 
   mutate(frac_bad=(short.count/(short.count+good.count))) %>%
   rename(abbreviation=species) %>% merge(metadata,by='abbreviation') %>%
   merge(n50,by='Species_name',all.x=T) %>%
+  merge(busco,by='abbreviation',all=T) %>%
   data.table() 
 
-#q2=quality.table[frac_bad<.4 & (N50>50000 | is.na(N50))]
-q2=quality.table[frac_bad<thresh]
+q2=quality.table[(frac_bad<.5 | is.na(frac_bad)) & (Completeness>90 | is.na(Completeness))]
+q3=rbind(q2,quality.table[abbreviation=='CaeEle'])
+#q2=quality.table[frac_bad<thresh]
 
-good.species=q2[frac_bad<thresh]$abbreviation
-good.taxid=q2[frac_bad<thresh]$taxid_code
+good.species=q3$abbreviation
+good.taxid=q3$taxid_code
 
 
 fwrite(quality.table,'./Filter/Quality_table.tsv',sep='\t')

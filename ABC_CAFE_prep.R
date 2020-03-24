@@ -8,7 +8,7 @@ shhh(library(tidyr))
 shhh(library(ggplot2))
 
 
-#setwd('~/Transporter_ID/ABC_id')
+setwd('~/Transporter_ID/ABC_id')
 used.species=readLines('./Filter/Quality_threshold_species.txt')
 dir.create('./CAFE',showWarnings = F)
 dir.create('./CAFE/CAFE_tables',showWarnings = F)
@@ -115,7 +115,7 @@ for (i in iter){
   
   sp=str_extract_all(readLines(paste0("./CAFE/clean_raxml_trees/",i,'_tree_ultrametric.tre')),pattern = "[A-z]+",simplify = T) %>% as.character()
   
-  sp.counts=abc.counts %>% select(c('Desc','Family ID',sp))
+  sp.counts=abc.counts %>% select(c('Desc','Family ID',all_of(sp)))
   fwrite(sp.counts,paste0('./CAFE/CAFE_tables/',i,'_ABC_CAFE_table.tsv'),sep='\t')
 }
 

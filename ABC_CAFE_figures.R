@@ -14,6 +14,9 @@ dir.create('./CAFE/CAFE_figures',showWarnings = F)
 
 #### Write CAFE count tables for each tre What are these used for?
 iter=list.files('./CAFE/CAFE_tables/') %>% gsub('_ABC_CAFE_table.tsv','',.)
+counts=fread('./CAFE/ABC_COUNTS_CAFE_FULL.tsv') %>% select(-Desc) %>% rename(fam=`Family ID`)
+
+
 for(i in iter){
   ids=gsub("# Output format for: ' Average Expansion', 'Expansions', 'No Change', 'Contractions', and 'Branch-specific P-values' = (node ID, node ID): ",
            "",readLines(paste0('./CAFE/outputs/',i,'_ABC_cafe_output.cafe'))[5],fixed=T)
@@ -117,16 +120,35 @@ tree.fig=function(group,family,node.annot='',label.annot=''){
   print(gp)
 }
 
-dros.a=tree.fig(group = 'Diptera',family = 'ABCA',node.annot = list(c('DroEre','DroBus'),c('CluMar','AnoCul')),
-         label.annot=c('Drosophilid','Mosquito'))
-ggsave(plot=dros.a,filename='./CAFE/CAFE_figures/Drosophila_ABCA.pdf',device='pdf',width=25,height=15)
+
+for (i in iter){ 
+  for(j in counts$fam[!grepl('Unsorted',counts$fam)]){ 
+    temp=tree.fig(group = i,family = j)
+    ggsave(plot=temp,filename=paste0('./CAFE/CAFE_figures/',i,'_',j,'.pdf'),device='pdf',width=25,height=15)
+  }
+}
 
 
-hemi.h=tree.fig(group = 'Hemipteran',family = 'ABCH',node.annot = list(c('BomMor','DroMel'),c('MyzPer','AphGly')),
-         label.annot=c('Holometabola','Aphid'))
-ggsave(plot=hemi.h,filename='./CAFE/CAFE_figures/Hemi_H.pdf',device='pdf',width=20,height=15)
+
+#dros.a=tree.fig(group = 'Diptera',family = 'ABCA',node.annot = list(c('DroEre','DroBus'),c('CluMar','AnoCul')),
+#         label.annot=c('Drosophilid','Mosquito'))
+#ggsave(plot=dros.a,filename='./CAFE/CAFE_figures/Drosophila_ABCA.pdf',device='pdf',width=25,height=15)
 
 
-lepi.b=tree.fig(group="Lepidopteran",family='ABCBF',node.annot=list(c('PapPol','PluXyl')),label.annot=c('Lepidoptera'))
-ggsave(plot=lepi.b,filename='./CAFE/CAFE_figures/Lepidoptera_ABCBF.pdf',device='pdf',width=20,height=15)
+#hemi.h=tree.fig(group = 'Hemipteran',family = 'ABCH',node.annot = list(c('BomMor','DroMel'),c('MyzPer','AphGly')),
+#         label.annot=c('Holometabola','Aphid'))
+#ggsave(plot=hemi.h,filename='./CAFE/CAFE_figures/Hemi_H.pdf',device='pdf',width=20,height=15)
+
+
+#lepi.b=tree.fig(group="Lepidopteran",family='ABCBF',node.annot=list(c('PapPol','PluXyl')),label.annot=c('Lepidoptera'))
+#ggsave(plot=lepi.b,filename='./CAFE/CAFE_figures/Lepidoptera_ABCBF.pdf',device='pdf',width=20,height=15)
+
+
+#arac.h=tree.fig(group = 'Arachnid',family = 'ABCH')
+#ggsave(plot=arac.h,filename='./CAFE/CAFE_figures/Arac_H.pdf',device='pdf',width=20,height=15)
+
+
+#arth.h=tree.fig(group = 'Arthropod',family = 'ABCH')
+#ggsave(plot=arth.h,filename='./CAFE/CAFE_figures/Arth_H.pdf',device='pdf',width=20,height=15)
+
 

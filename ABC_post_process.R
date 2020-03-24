@@ -110,13 +110,16 @@ fwrite(anova.filter,'./Final_outputs/Figures_Tables/ANOVA_table.csv')
 
 
 #### Make count variation graph
-count.plot=select(full.counts,abbreviation,Taxonomic_Classification,ABCA:ABCH) %>% 
-  group_by(Taxonomic_Classification) %>%
-  filter(n()>7) %>% data.table() %>% 
+count.plot=select(full.counts,abbreviation,Taxonomic_Classification,ABCA:ABCH) %>%
+  filter(Taxonomic_Classification %in% c('Arachnida','Coleoptera',
+                                         'Diptera','Hemiptera','Hymenoptera','Lepidptera')) %>% 
+  data.table() %>%
+  #group_by(Taxonomic_Classification) %>%
+  #filter(n()>5) %>% data.table() %>% 
   ### select for relevant columsn
   melt(id.vars=c('abbreviation','Taxonomic_Classification'),measure.vars=patterns("ABC"), ###Melt data frame to have family and size be measurements
        variable.name='ABC_Family',value.name='Family_Size') %>%  ### remove taxonomic groups with fewer than 30 total events (fam x species). Generally under 5 species
-  filter(ABC_Family %in% anova.distinct$family) %>% ### only variable families
+  filter(ABC_Family %in% c('ABCA','ABCBF','ABCC','ABCH')) %>% ### only variable families
   data.table()
 
 
@@ -124,7 +127,7 @@ gp=ggplot(count.plot,aes(x=Taxonomic_Classification,y=Family_Size,fill=Taxonomic
 #gp=gp+geom_dotplot(binaxis = 'y',stackdir='center',binwidth=1.5,color='black',dotsize=.3)
 gp=gp+geom_boxplot()
 #gp=gp+geom_bar(position='stack',stat='identity')
-gp=gp+facet_wrap(vars(ABC_Family),nrow=2,ncol=2,scales='free')
+gp=gp+facet_wrap(vars(ABC_Family),nrow=2,scales='free')
 gp=gp+ggtitle('Family Size Variation Across Lineages')
 gp=gp+labs(x='\nABC Family',y='Family Size\n')
 gp=gp+scale_y_continuous(labels = formatter(nsmall = 0))

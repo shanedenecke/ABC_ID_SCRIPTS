@@ -30,7 +30,7 @@ for i in ./proteomes/*; do
 done
 
 ###### 4)Filter based on number of NBDs
-Rscript ./ABC_ID_SCRIPTS/ABC_domain_filter_new.R $QUAL_THRESH
+Rscript ./ABC_ID_SCRIPTS/ABC_domain_filter_new.R
 
 ###### 5) CAFE
 mkdir CAFE
