@@ -5,13 +5,20 @@ SPEC=$H/ABC_REF/Input_files/target_species.tsv
 QUAL_THRESH=.3
 THREADS=14
 
-cd $H
+cd $H 
 
 ###### 1) proteome prepare
 source ./ABC_ID_SCRIPTS/ABC_proteome_prepare.sh
 
 ###### 2) Build database materials
 source ./ABC_ID_SCRIPTS/ABC_Model_database_build_join.sh
+
+
+##### 2.5) Run BUSCO for quality assessment
+source ./ABC_ID_SCRIPTS/ABC_BUSCO.sh
+
+
+
 
 ###### 3) Search proteomes
 mkdir ABC_search
