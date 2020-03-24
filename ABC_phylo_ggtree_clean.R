@@ -12,6 +12,12 @@ args = commandArgs(trailingOnly=TRUE)
 #args[1]= '~/Transporter_ID/ABC_id/phylo/clean_trees'
 setwd(args[1])
 
+if(length(args)==2){
+  species=readLines(args[2])
+}else{
+    species=''
+  }
+
 calc.xmax=function(x){
   x=tbl 
   tips=tbl[grepl('[A-Z]',label)]$node

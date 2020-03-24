@@ -28,7 +28,8 @@ thresh=as.numeric(args[1])
 
 
 ### Import key and metadata
-key=data.table(family=c(gsub('_','',readLines('./ABC_REF/Input_files/ABC_families.txt')),'ABC_Unsorted'),domains=c(2,2,1,2,1,2,2,1,1,1))
+key=data.table(family=c(gsub('_','',readLines('./ABC_REF/Input_files/ABC_families.txt')),'ABC_Unsorted'),
+               mins=c(1,2,1,2,1,2,2,1,1,1),maxes=c(c(2,2,1,2,1,2,2,1,1,2)))
 metadata=fread('./ABC_REF/species_metadata/Arthropod_species_metadata.tsv',header=T) %>% 
   select(Species_name,abbreviation,taxid_code)
 total.fasta=seqinr::read.fasta('./Filter/ABC_preliminary_total.faa',set.attributes = F,as.string = T,forceDNAtolower = F)
@@ -59,7 +60,7 @@ count.fams=function(x){
 ### Parse IPscan
 pfam.scan=fread('./Filter/HMM_PF00005_output_clean.tsv',select=c(1,3,20,21)) %>% rename(name=V1,len=V3,start=V20,end=V21)
 pfam.scan$fam=gsub('^.+__(.+)__.+$','\\1',pfam.scan$name)
-pfam.table=pfam.scan %>% group_by(name,fam,len) %>% summarize(domains=length(name)) %>% filter(fam!='ABC_Unsorted') %>% data.table()
+pfam.table=pfam.scan %>% group_by(name,fam,len) %>% summarize(domains=length(name)) %>% data.table()
 
 #### sort into categories
 short.list=list()
@@ -67,10 +68,11 @@ good.list=list()
 long.list=list()
 for(i in unique(pfam.table$fam)){
   sub=pfam.table[fam==i]
-  mins=key[family==i]$domains
-  short.list[[i]]=sub[domains<mins]
-  good.list[[i]]=sub[domains==mins]
-  long.list[[i]]=sub[domains>mins]
+  dom.max=key[family==i]$maxes
+  dom.min=key[family==i]$min
+  short.list[[i]]=sub[dom.min<mins & len<150]
+  good.list[[i]]=sub[domains==mins & len>150]
+  #long.list[[i]]=sub[domains>mins]
 }
 too.short=rbindlist(short.list) %>% domain.annot() %>% data.table()
 too.long=rbindlist(long.list) %>% domain.annot() %>% data.table()
@@ -79,14 +81,13 @@ just.right=rbindlist(good.list) %>% domain.annot() %>% data.table()
 
 ### get counts
 short.count.sp=too.short %>% count.fams() %>% group_by(species) %>% summarize(short.count=sum(count)) %>% data.table()
-long.count.sp=too.long %>% count.fams() %>% group_by(species) %>% summarize(long.count=sum(count)) %>% data.table()
+#long.count.sp=too.long %>% count.fams() %>% group_by(species) %>% summarize(long.count=sum(count)) %>% data.table()
 good.count.sp=just.right %>% count.fams() %>% group_by(species) %>% summarize(good.count=sum(count)) %>% data.table()
 
 
 ##### Quality cutoff
-quality.table=merge(short.count.sp,long.count.sp,by='species',all=T) %>% 
-  merge(good.count.sp,by='species',all=T) %>%  replace(is.na(.), 0) %>% 
-  mutate(frac_bad=(short.count+long.count)/(short.count+long.count+good.count)) %>%
+quality.table=merge(short.count.sp,good.count,by='species',all=T) %>% replace(is.na(.), 0) %>% 
+  mutate(frac_bad=(short.count/(short.count+good.count))) %>%
   rename(abbreviation=species) %>% merge(metadata,by='abbreviation') %>%
   merge(n50,by='Species_name',all.x=T) %>%
   data.table() 
