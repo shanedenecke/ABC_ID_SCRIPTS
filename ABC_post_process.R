@@ -29,15 +29,17 @@ formatter <- function(...){
 
 #### Import common datasets
 meta=fread('./ABC_REF/species_metadata/Arthropod_species_metadata.tsv')
-counts=fread('./CAFE/ABC_COUNTS_CAFE_FULL.tsv') %>% select(-Desc) %>% rename(fam=`Family ID`)
-benchmark.raw=fread('./ABC_REF/species_metadata/ABC_benchmark_counts.csv') %>% select(-Order)
+qual=readLines('./Filter/Quality_threshold_species.txt')
+#counts=fread('./CAFE/ABC_COUNTS_CAFE_FULL.tsv') %>% select(-Desc) %>% rename(fam=`Family ID`)
+counts=fread('./Final_outputs/Combined_files/ABC_transporter_counts.csv') %>% select(c(fam,all_of(qual)))
+benchmark.raw=fread('./ABC_REF/species_metadata/ABC_benchmark_counts.csv') %>% select(-Order) 
 
 #### Counts table transposed. Maybe port over to Domain filter new. No new data incorporated and a bit redundant
-trans=shane.transpose(counts,fam) %>% rename(abbreviation=newcol)
-full.counts=merge(meta,trans,by='abbreviation') %>% select(-Common_name) %>% data.table()
-full.counts=data.table(select(full.counts,abbreviation:Vory),apply(select(full.counts,ABCA:ABCH),2,as.numeric))
-full.counts$ABC_total=rowSums(select(full.counts,ABCA:ABCH))
-fwrite(full.counts,'./Final_outputs/Combined_files/Transposed_counts.csv')
+trans=shane.transpose(counts,fam) %>% rename(abbreviation=newcol)  
+full.counts=merge(meta,trans,by='abbreviation') %>% select(-Common_name) %>% data.table() 
+full.counts=data.table(select(full.counts,abbreviation:Vory),apply(select(full.counts,ABCA:ABCH),2,as.numeric)) 
+full.counts$ABC_total=rowSums(select(full.counts,ABCA:ABCH)) 
+fwrite(full.counts,'./Final_outputs/Combined_files/Transposed_counts.csv') 
 
 
 ################# Benchmarking against known datasets 
@@ -53,11 +55,11 @@ gp=gp+scale_y_continuous(breaks=seq(-.5,.5,by=.1),limits=c(-.5,.5))
 gp=gp+theme_bw()
 gp=gp+theme(text=element_text(face="bold",family="serif"),panel.grid=element_blank(),
             axis.ticks.x=element_line(),panel.border=element_rect(colour="black",fill=NA),
-            strip.text=element_text(size=20),strip.background=element_rect("white"),
-            axis.title=element_text(size=17),axis.text.x=element_text(angle=45,hjust=1),
+            axis.title=element_text(size=17),
+            axis.text.x=element_text(angle=30,hjust=1,size=14),axis.text.y=element_text(size=14),
             legend.position = 'none',plot.title = element_text(hjust = 0.5))
 
-#print(gp)
+print(gp)
 ggsave(plot=gp,filename='./Final_outputs/Figures_Tables/Benchmark_graph.pdf')
 
 

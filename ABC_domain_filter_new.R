@@ -22,7 +22,7 @@ system('cat ./Filter/HMM_PF00005_output.tsv | tail -n +4 | head -n -10 > ./Filte
 
 
 ### Import arguments
-args = commandArgs(trailingOnly=TRUE)
+#args = commandArgs(trailingOnly=TRUE)
 #args[1]=.3
 #thresh=as.numeric(args[1])
 
@@ -71,14 +71,17 @@ for(i in unique(pfam.table$fam)){
   sub=pfam.table[fam==i]
   dom.max=key[family==i]$maxes
   dom.min=key[family==i]$min
-  short.list[[i]]=sub[domains<dom.min | len<150]
-  good.list[[i]]=sub[domains>=dom.min & len>150]
+  #short.list[[i]]=sub[domains<dom.min]
+  #good.list[[i]]=sub[domains>=dom.min]
+  short.list[[i]]=sub[len<250]
+  good.list[[i]]=sub[len>=250]
   #long.list[[i]]=sub[domains>mins]
 }
 too.short=rbindlist(short.list) %>% domain.annot() %>% data.table()
 #too.long=rbindlist(long.list) %>% domain.annot() %>% data.table()
 just.right=rbindlist(good.list) %>% domain.annot() %>% data.table()
 
+#just.right=rbind(too.short,just.right)
 
 ### get counts
 short.count.sp=too.short %>% count.fams() %>% group_by(species) %>% summarize(short.count=sum(count)) %>% data.table()
@@ -94,7 +97,7 @@ quality.table=merge(short.count.sp,good.count.sp,by='species',all=T) %>% replace
   merge(busco,by='abbreviation',all=T) %>%
   data.table() 
 
-q2=quality.table[(frac_bad<.5 | is.na(frac_bad)) & (Completeness>90 | is.na(Completeness))]
+q2=quality.table[(Completeness>90 | is.na(Completeness))]
 q3=rbind(q2,quality.table[abbreviation=='CaeEle'])
 #q2=quality.table[frac_bad<thresh]
 
