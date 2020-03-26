@@ -71,14 +71,15 @@ for(i in unique(pfam.table$fam)){
   sub=pfam.table[fam==i]
   dom.max=key[family==i]$maxes
   dom.min=key[family==i]$min
-  short.list[[i]]=sub[domains<dom.min | len<150]
-  good.list[[i]]=sub[domains>=dom.min & len>150]
+  short.list[[i]]=sub[len<250]#domains<dom.min]# | len<150]
+  good.list[[i]]=sub[len>=250]#domains>=dom.min]# & len>150]
   #long.list[[i]]=sub[domains>mins]
 }
 too.short=rbindlist(short.list) %>% domain.annot() %>% data.table()
 #too.long=rbindlist(long.list) %>% domain.annot() %>% data.table()
 just.right=rbindlist(good.list) %>% domain.annot() %>% data.table()
 
+#just.right=rbind(too.short,just.right)
 
 ### get counts
 short.count.sp=too.short %>% count.fams() %>% group_by(species) %>% summarize(short.count=sum(count)) %>% data.table()
