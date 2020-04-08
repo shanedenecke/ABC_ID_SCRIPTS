@@ -45,19 +45,21 @@ fwrite(full.counts,'./Final_outputs/Combined_files/Transposed_counts.csv')
 ################# Benchmarking against known datasets 
 merged.benchmark=select(full.counts,Species_name,ABC_total) %>% merge(benchmark.raw,by='Species_name') %>% rename(ABC_This_Study=ABC_total)
 merged.benchmark$Difference=merged.benchmark$ABC_This_Study-merged.benchmark$Lit_ABC_count
-merged.benchmark$Percent_Difference=merged.benchmark$Difference/merged.benchmark$ABC_This_Study
+merged.benchmark$Percent_Difference=(merged.benchmark$Difference/merged.benchmark$ABC_This_Study)*100
 
 ##Plot benchmark data
 gp=ggplot(merged.benchmark,aes(x=Species_name,y=Percent_Difference))
 gp=gp+geom_bar(stat='identity')
 gp=gp+geom_hline(yintercept=0,linetype=1,size=2,color='red')
-gp=gp+scale_y_continuous(breaks=seq(-.5,.5,by=.1),limits=c(-.5,.5))
+gp=gp+scale_y_continuous(breaks=seq(-50,50,by=10),limits=c(-50,50))
+gp=gp+labs(x='\nSpecies Name',y='Percent Difference\n') 
 gp=gp+theme_bw()
 gp=gp+theme(text=element_text(face="bold",family="serif"),panel.grid=element_blank(),
             axis.ticks.x=element_line(),panel.border=element_rect(colour="black",fill=NA),
             axis.title=element_text(size=17),
-            axis.text.x=element_text(angle=30,hjust=1,size=14),axis.text.y=element_text(size=14),
-            legend.position = 'none',plot.title = element_text(hjust = 0.5))
+            axis.text.x=element_text(angle=30,hjust=1,size=12),axis.text.y=element_text(size=12),
+            legend.position = 'none',plot.title = element_text(hjust = 0.5),
+            plot.margin=margin(t = 0, r = 2, b = 0, l = 2, unit = "cm"))
 
 print(gp)
 ggsave(plot=gp,filename='./Final_outputs/Figures_Tables/Benchmark_graph.pdf')
@@ -74,6 +76,7 @@ for(i in iter.i){
     
     #### Filter Data for those groups which have over 5 individuals
     good=names(table(full.counts[[j]]))[table(full.counts[[j]])>5]
+    #good=c('Arachnida','Coleoptera','Diptera','Hemiptera','Hymenoptera','Lepidoptera')
     sub=full.counts[full.counts[[j]] %in% good]
     
     ### Make ggplot
@@ -114,7 +117,7 @@ fwrite(anova.filter,'./Final_outputs/Figures_Tables/ANOVA_table.csv')
 #### Make count variation graph
 count.plot=select(full.counts,abbreviation,Taxonomic_Classification,ABCA:ABCH) %>%
   filter(Taxonomic_Classification %in% c('Arachnida','Coleoptera',
-                                         'Diptera','Hemiptera','Hymenoptera','Lepidptera')) %>% 
+                                         'Diptera','Hemiptera','Hymenoptera','Lepidoptera')) %>% 
   data.table() %>%
   #group_by(Taxonomic_Classification) %>%
   #filter(n()>5) %>% data.table() %>% 

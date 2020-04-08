@@ -39,6 +39,6 @@ echo 'Numberof GOOD proteomes is ' $(ls ./proteome_clean/clean_fasta/* | grep -E
 
 mkdir proteomes
 mv ./proteome_clean/clean_fasta/*_unigene.faa ./proteomes/
-cp ./ABC_REF/non_model_proteomes/non_orthoDB_fasta/* ./proteomes/
+cp ./ABC_REF/non_model_proteomes/non_orthoDB_fasta/*.faa ./proteomes/
 
 rm -rf ./proteome_clean/

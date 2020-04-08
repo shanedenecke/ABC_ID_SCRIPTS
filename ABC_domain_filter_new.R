@@ -97,14 +97,14 @@ quality.table=merge(short.count.sp,good.count.sp,by='species',all=T) %>% replace
   merge(busco,by='abbreviation',all=T) %>%
   data.table() 
 
-q2=quality.table[(Completeness>90 | is.na(Completeness))]
+q2=quality.table[(Completeness>75 | is.na(Completeness))]
 q3=rbind(q2,quality.table[abbreviation=='CaeEle'])
 #q2=quality.table[frac_bad<thresh]
 
 good.species=q3$abbreviation
 good.taxid=q3$taxid_code
 
-
+  
 fwrite(quality.table,'./Filter/Quality_table.tsv',sep='\t')
 writeLines(good.species,'./Filter/Quality_threshold_species.txt')
 writeLines(good.taxid,'./Filter/Quality_threshold_taxid.txt')

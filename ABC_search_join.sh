@@ -10,7 +10,8 @@ echo $bname
 mkdir ABC_search/$bname
 
 ### perform HMM search
-hmmsearch --cpu $THREADS --notextw -E 20 ./model_database/HMM_databases/Only_ABCs.hmm $1 | sed -n '/Scores for complete sequences/,/------ inclusion threshold/p' | sed '$ d' | awk 'NR > 4 { print }' | awk '/^$/{exit} {print $0}' | sed -e "s/\s\{1,\}/\t/g" | cut -f 2- > ./ABC_search/$bname/total_ABC_HMM.table
+#hmmsearch --cpu $THREADS --notextw -E 20 ./model_database/HMM_databases/Only_ABCs.hmm $1 | sed -n '/Scores for complete sequences/,/------ inclusion threshold/p' | sed '$ d' | awk 'NR > 4 { print }' | awk '/^$/{exit} {print $0}' | sed -e "s/\s\{1,\}/\t/g" | cut -f 2- > ./ABC_search/$bname/total_ABC_HMM.table
+hmmsearch --cpu $THREADS --notextw -E 20 ./ABC_REF/Model_ABC_sets/ABC_tran.hmm $1 | sed -n '/Scores for complete sequences/,/------ inclusion threshold/p' | sed '$ d' | awk 'NR > 4 { print }' | awk '/^$/{exit} {print $0}' | sed -e "s/\s\{1,\}/\t/g" | cut -f 2- > ./ABC_search/$bname/total_ABC_HMM.table
 #hmmsearch --notextw -E 20 ./model_database/HMM_databases/Only_ABCs.hmm $i | sed -n '/Scores for complete sequences/,/------ inclusion threshold/p' | sed '$ d' | awk 'NR > 4 { print }' | awk '/^$/{exit} {print $0}' | sed -e "s/\s\{1,\}/\t/g" | cut -f 2- > ./ABC_search/$bname/total_ABC_HMM.table
 
 ### clean HMM search
