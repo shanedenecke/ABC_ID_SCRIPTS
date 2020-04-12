@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 cd $H
 mkdir proteome_clean
 

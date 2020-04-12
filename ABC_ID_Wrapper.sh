@@ -8,7 +8,8 @@ THREADS=14
 cd $H 
 
 ###### 1) proteome prepare
-source ./ABC_ID_SCRIPTS/ABC_proteome_prepare.sh
+#source ./ABC_ID_SCRIPTS/ABC_proteome_prepare.sh
+source ./ABC_ID_SCRIPTS/ABC_proteome_add.sh
 
 ###### 2) Build database materials
 source ./ABC_ID_SCRIPTS/ABC_Model_database_build_join.sh
@@ -37,17 +38,16 @@ mkdir CAFE
 mkdir ./CAFE/clean_raxml_trees
 #source ./ABC_ID_SCRIPTS/ABC_Ultrametric_tree_generate.sh
 cp ./ABC_REF/ultrametric_tree_backup/*.tre ./CAFE/clean_raxml_trees/
-Rscript ./ABC_ID_SCRIPTS/ABC_CAFE_prep.R
+Rscript ./ABC_ID_SCRIPTS/ABC_CAFE_prep.R  
 source ./ABC_ID_SCRIPTS/ABC_CAFE_run_full.sh
 Rscript ./ABC_ID_SCRIPTS/ABC_CAFE_figures.R
-
+  
 ###### 6) Produce Figures and Tables
 Rscript ./ABC_ID_SCRIPTS/ABC_post_process.R
   
 
 ### 7) Make phylogeny for relevant species 
-mkdir phylo
-mkdir ./phylo/clean_trees
+
 source ./ABC_ID_SCRIPTS/ABC_phylo.sh
 #Rscript ~/Applications/Custom_Applications/ggtree_clean_phylogeny.R #### NEED TO GET ALL TREES IN ONE FOLDER
 #cp ./ABC_REF/phylo_premade/* ./phylo/clean_trees/
