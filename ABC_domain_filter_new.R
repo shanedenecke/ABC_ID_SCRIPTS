@@ -7,7 +7,7 @@ shhh(library(readr))
 shhh(library(stringr))
 shhh(library(seqinr))
 
-setwd('~/Transporter_ID/ABC_id/')
+#setwd('/mnt/disk/shane/Transporter_ID/ABC_id')
 dir.create('./Filter',showWarnings = F)
 dir.create('./Final_outputs',showWarnings = F)
 dir.create('./Final_outputs/Combined_files',showWarnings = F)
