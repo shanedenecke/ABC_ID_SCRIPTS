@@ -19,7 +19,7 @@ for i in ../proteomes/* ../ABC_REF/Model_ABC_sets/Raw_proteomes/*; do
 done
 
 echo 'Finihsed with all species. Begginning to parse outputs'
-python3 ~/Applications/Custom_Applications/BUSCO_parse.py -dir ./clean_summary/ > $H/BUSCO/BUSCO_final_summary.tsv
+python3 ~/Applications/Custom_Applications/BUSCO_parse.py -dir ./BUSCO/clean_summary/ > $H/BUSCO/BUSCO_final_summary.tsv
 
 
 cd $H
