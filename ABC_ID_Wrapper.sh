@@ -36,7 +36,7 @@ Rscript ./ABC_ID_SCRIPTS/ABC_domain_filter_new.R
 ###### 5) CAFE
 mkdir CAFE
 mkdir ./CAFE/clean_raxml_trees
-#source ./ABC_ID_SCRIPTS/ABC_Ultrametric_tree_generate.sh
+#source ./ABC_ID_SCRIPTS/ABC_species_phylogeny.sh
 cp ./ABC_REF/ultrametric_tree_backup/*.tre ./CAFE/clean_raxml_trees/
 Rscript ./ABC_ID_SCRIPTS/ABC_CAFE_prep.R  
 source ./ABC_ID_SCRIPTS/ABC_CAFE_run_full.sh
