@@ -8,7 +8,7 @@ shhh(library(tidyr))
 shhh(library(ggplot2))
 
 
-setwd('~/Transporter_ID/ABC_id')
+#setwd('/mnt/disk/shane/Transporter_ID/ABC_id')
 used.species=readLines('./Filter/Quality_threshold_species.txt')
 dir.create('./CAFE',showWarnings = F)
 dir.create('./CAFE/CAFE_tables',showWarnings = F)
@@ -36,7 +36,7 @@ fwrite(abc.counts,'./CAFE/ABC_COUNTS_CAFE_FULL.tsv',sep='\t')
 
 ### create list of tree base names
 iter=list.files('./CAFE/clean_raxml_trees')[grepl('RAxML_bipartitions.',list.files('./CAFE/clean_raxml_trees'))] %>%
-  str_remove('RAxML_bipartitions.') %>% str_remove('.tre')
+  str_remove('RAxML_bipartitions.') %>% str_remove('_species.nwk')
 
 
 
@@ -44,7 +44,9 @@ iter=list.files('./CAFE/clean_raxml_trees')[grepl('RAxML_bipartitions.',list.fil
 for (i in iter){
   
   ### rename tree
-  rax.tree=readLines(paste0('./CAFE/clean_raxml_trees/RAxML_bipartitions.',i,'.tre'))
+  rax.tree=readLines(paste0('./CAFE/clean_raxml_trees/RAxML_bipartitions.',i,'_species.nwk'))
+  
+  #### this chunk renmaes taxid codes to 6 letter abbreviations. It has been deprecated with the latest species tree phylogeny script.
   for(j in metadata$taxid_code){
     if(grepl(j,rax.tree)){
       rax.tree=gsub(j,metadata[taxid_code==j]$abbreviation,rax.tree)
