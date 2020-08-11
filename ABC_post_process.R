@@ -8,7 +8,7 @@ shhh(library(ggsci))
 
 
 ############## Directories
-setwd('~/Transporter_ID/ABC_id')
+#setwd('~/Transporter_ID/ABC_id')
 dir.create('./Final_outputs/Figures_Tables',showWarnings = F)
 dir.create('./Final_outputs/Figures_Tables/ABC_plots',showWarnings = F)
 

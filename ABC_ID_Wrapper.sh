@@ -1,34 +1,35 @@
 #!/usr/bin/env bash
-H=/mnt/disk/shane/Transporter_ID/ABC_id
-PHYLO=$H/ABC_REF/Input_files/Phylo_list.txt
-SPEC=$H/ABC_REF/Input_files/target_species.tsv
-QUAL_THRESH=.3
-THREADS=10
 
+### 1) Set environemntal variables for pipeline
+H=/mnt/disk/shane/Transporter_ID/Arthropod_ABC_pipeline
+SPEC=$H/GENERAL_REFERENCE/keys/Arthropod_species_metadata.tsv
+BUSCO_THRESH=75
+THREADS=14
+
+### 2) Set Home working Directory
 cd $H 
 
-###### 1) proteome prepare
+### 3) Prepare proteomes
+mkdir intermediate
+mkdir proteomes
 source ./ABC_ID_SCRIPTS/ABC_proteome_prepare.sh
-#source ./ABC_ID_SCRIPTS/ABC_proteome_add.sh $H/ABC_REF/non_model_proteomes/append/*
-
+  
 ###### 2) Build database materials
-source ./ABC_ID_SCRIPTS/ABC_Model_database_build_join.sh
+source ./ABC_ID_SCRIPTS/ABC_Model_database_build.sh
 
 
-##### 2.5) Run BUSCO for quality assessment
+##### 3) Run BUSCO for quality assessment
 source ./ABC_ID_SCRIPTS/ABC_BUSCO.sh
 
 ###### 3) Search proteomes
-mkdir ABC_search
-mkdir preliminary_ABC
-mkdir preliminary_ABC/proteomes
-mkdir preliminary_ABC/dicts
+mkdir -p ABC_search
+mkdir -p preliminary_ABC preliminary_ABC/proteomes preliminary_ABC/dicts
 for i in ./proteomes/*; do
-  source ./ABC_ID_SCRIPTS/ABC_search_join.sh $i
+ ./ABC_ID_SCRIPTS/ABC_search.sh -target $i -hmm_profile ./model_database/HMM_databases/Only_ABCs.hmm -outdir ABC_search -threads $THREADS
 done
 
 ###### 4)Filter based on number of NBDs
-Rscript ./ABC_ID_SCRIPTS/ABC_domain_filter_new.R
+Rscript ./ABC_ID_SCRIPTS/ABC_domain_filter.R
 
 ###### 5) CAFE
 mkdir CAFE

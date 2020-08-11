@@ -9,7 +9,7 @@ shhh(library(ggplot2))
 shhh(library(treeio))
 
 ### set directories
-#setwd('~/Transporter_ID/ABC_id/')
+#setwd('/mnt/disk/shane/Transporter_ID/ABC_id/')
 dir.create('./CAFE/CAFE_figures',showWarnings = F)
 
 #### Write CAFE count tables for each tre What are these used for?

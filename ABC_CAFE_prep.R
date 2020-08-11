@@ -1,3 +1,4 @@
+#!/usr/bin/env Rscript
 shhh <- suppressPackageStartupMessages
 shhh(library(dplyr))
 shhh(library(data.table))
@@ -6,7 +7,7 @@ shhh(library(ape))
 shhh(library(ggtree))
 shhh(library(tidyr))
 shhh(library(ggplot2))
-
+#### FILTER OUT QUALITY ON LINE 61
 
 #setwd('/mnt/disk/shane/Transporter_ID/ABC_id')
 used.species=readLines('./Filter/Quality_threshold_species.txt')
@@ -30,7 +31,7 @@ lambda.convert=function(x){
 ### format table for CAFE
 colnames(abc.counts)[1]='Family ID'
 abc.counts$Desc='(null)'
-abc.counts=select(abc.counts,Desc,'Family ID',metadata$abbreviation)
+abc.counts=select(abc.counts,Desc,'Family ID',all_of(used.species))
 fwrite(abc.counts,'./CAFE/ABC_COUNTS_CAFE_FULL.tsv',sep='\t')
 
 
@@ -58,7 +59,9 @@ for (i in iter){
   tr=read.tree(paste0('./CAFE/clean_raxml_trees/raxml_tree_named_',i,'.tre'))
   
   ### Remove tips which are not in final dataset
-  tr=drop.tip(tr,tr$tip.label[grepl('[0-9]+_0',tr$tip.label)])
+  drops=tr$tip.label[!(tr$tip.label %in% used.species)]
+  tr=drop.tip(tr,drops)
+  #tr=drop.tip(tr,tr$tip.label[grepl('[0-9]+_0',tr$tip.label)])
   #if(i=='Diptera'){tr=drop.tip(tr,'BomMor')}
   
   
@@ -115,7 +118,7 @@ for (i in iter){
   ## create lambda file
   writeLines(lambda.convert(readLines(paste0("./CAFE/clean_raxml_trees/",i,'_tree_ultrametric.tre'))),paste0("./CAFE/clean_raxml_trees/",i,'_tree_lambda.txt')) 
   
-  sp=str_extract_all(readLines(paste0("./CAFE/clean_raxml_trees/",i,'_tree_ultrametric.tre')),pattern = "[A-z]+",simplify = T) %>% as.character()
+  sp=str_extract_all(readLines(paste0("./CAFE/clean_raxml_trees/",i,'_tree_ultrametric.tre')),pattern = "[A-z]+",simplify = T)  %>% as.character()
   
   sp.counts=abc.counts %>% select(c('Desc','Family ID',all_of(sp)))
   fwrite(sp.counts,paste0('./CAFE/CAFE_tables/',i,'_ABC_CAFE_table.tsv'),sep='\t')
