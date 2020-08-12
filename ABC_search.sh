@@ -32,7 +32,7 @@ done
 
 
 ### Debugging
-#PROTEOME=./proteomes/AcrEch_unigene.faa
+#PROTEOME=./proteomes/HelVir_unigene.faa
 #HMM_PROFILE=./model_database/HMM_databases/Only_ABCs.hmm
 #THREADS=14
 #OUTDIR=./ABC_search
@@ -65,7 +65,9 @@ Rscript ./ABC_ID_SCRIPTS/ABC_Family_Sort.R ./ABC_search/$bname/total_ABC_recip_b
 grep -A 1 "__ABC" ./ABC_search/$bname/total_ABC_marked_proteome.faa | sed '/--/d' > ./ABC_search/$bname/Preliminary_ABCs.faa
 rm ./ABC_search/$bname/total_ABC_marked_proteome.faa
 
-### Move files to preliminary locations
-mv ./ABC_search/$bname/total_ABC_dict.csv ./preliminary_ABC/dicts/$bname'_preliminary_ABC_dict.csv'
-mv ./ABC_search/$bname/Preliminary_ABCs.faa ./preliminary_ABC/proteomes/$bname'_preliminary_ABC.faa'
- 
+## Filter based on domain content
+hmmsearch --domtblout ./ABC_search/$bname/HMM_PF00005_output.tsv ./GENERAL_REFERENCE/Model_ABC_sets/ABC_tran.hmm ./ABC_search/$bname/Preliminary_ABCs.faa > ./ABC_search/$bname/hmm_junk.txt
+cat ./ABC_search/$bname/HMM_PF00005_output.tsv | tail -n +4 | head -n -10 > ./ABC_search/$bname/HMM_PF00005_output_clean.tsv
+
+
+./ABC_ID_SCRIPTS/ABC_domain_filter.R $(readlink -f ./ABC_search/$bname)

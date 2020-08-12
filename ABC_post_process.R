@@ -8,9 +8,13 @@ shhh(library(ggsci))
 
 
 ############## Directories
-#setwd('~/Transporter_ID/ABC_id')
+setwd('/mnt/disk/shane/Transporter_ID/Arthropod_ABC_pipeline')
+dir.create('./Final_outputs')
+dir.create('./Final_outputs/ABC_dicts')
+dir.create('./Final_outputs/ABC_proteomes')
+dir.create('./Final_outputs/combined_files')
 dir.create('./Final_outputs/Figures_Tables',showWarnings = F)
-dir.create('./Final_outputs/Figures_Tables/ABC_plots',showWarnings = F)
+dir.create('./Final_outputs/Figures_Tables/ANOVA_plots',showWarnings = F)
 
 ############## Functions
 shane.transpose=function(dt,newcol){
@@ -28,22 +32,48 @@ formatter <- function(...){
 
 
 #### Import common datasets
-meta=fread('./ABC_REF/species_metadata/Arthropod_species_metadata.tsv')
-qual=readLines('./Filter/Quality_threshold_species.txt')
-#counts=fread('./CAFE/ABC_COUNTS_CAFE_FULL.tsv') %>% select(-Desc) %>% rename(fam=`Family ID`)
-counts=fread('./Final_outputs/Combined_files/ABC_transporter_counts.csv') %>% select(c(fam,all_of(qual)))
-benchmark.raw=fread('./ABC_REF/species_metadata/ABC_benchmark_counts.csv') %>% select(-Order) 
+meta=fread('./GENERAL_REFERENCE/keys/Arthropod_species_metadata.tsv')
+benchmark.raw=fread('./GENERAL_REFERENCE/keys/ABC_benchmark_counts.csv') %>% select(-Order) 
+busco.unfiltered=fread('./BUSCO/BUSCO_final_summary_unfiltered.tsv') %>% rename(abbreviation=Species)
+busco.filtered=fread('./BUSCO/BUSCO_final_summary.tsv') %>% rename(abbreviation=Species)
 
-#### Counts table transposed. Maybe port over to Domain filter new. No new data incorporated and a bit redundant
-trans=shane.transpose(counts,fam) %>% rename(abbreviation=newcol)  
-full.counts=merge(meta,trans,by='abbreviation') %>% select(-Common_name) %>% data.table() 
-full.counts=data.table(select(full.counts,abbreviation:Vory),apply(select(full.counts,ABCA:ABCH),2,as.numeric)) 
-full.counts$ABC_total=rowSums(select(full.counts,ABCA:ABCH)) 
-fwrite(full.counts,'./Final_outputs/Combined_files/Transposed_counts.csv') 
+#### Extract Final proteomes and dictionaries from each ABC species
+######################## NEED TO ADD MODEL DATA AT THIS STEP
+for (i in list.files('./ABC_search',full.names = T)){
+  base=basename(i)
+  file.copy(paste0(i,'/','Final_ABCs.faa'),paste0('./Final_outputs/ABC_proteomes/',base,'_Final_ABC_proteins.faa'))
+  file.copy(paste0(i,'/','Final_ABC_table.tsv'),paste0('./Final_outputs/ABC_dicts/',base,'_Final_ABC_table.tsv'))
+}
+system('cp ./GENERAL_REFERENCE/Model_ABC_sets/ABC_proteins/*.faa ./Final_outputs/ABC_proteomes/')
+system('cp ./GENERAL_REFERENCE/Model_ABC_sets/ABC_final_tables/*.tsv ./Final_outputs/ABC_dicts/')
+
+
+#######################
+### combine all figures and tables to generate full_dictionary and full ABC_proteome
+
+system('cat ./Final_outputs/ABC_proteomes/* > ./Final_outputs/combined_files/All_ABCs.faa')
+all.tables=lapply(as.list(list.files('./Final_outputs/ABC_dicts/',full.names = T)),fread)
+final.table=rbindlist(all.tables,fill=T)
+fwrite(final.table,'./Final_outputs/combined_files/Final_full_dictionary.tsv',sep='\t')
+
+
+#### Make counts tables 
+count.raw=final.table %>% group_by(fam,abbreviation) %>% summarize(count=n()) %>% data.table() 
+count.wide=count.raw %>% dcast(fam~abbreviation)
+count.long=count.raw %>% dcast(abbreviation~fam) %>% rowwise() %>%
+  #mutate(ABC_total=ABCA+ABCBF+ABCH+ABCC+ABCD+ABCE+ABCF+ABCG+ABCH+ABC_Unsorted) %>% 
+  mutate(ABC_total=sum(ABCA,ABCBF,ABCH,ABCC,ABCD,ABCE,ABCF,ABCG,ABCH,ABC_Unsorted,na.rm = T)) %>% 
+  merge(meta,by='abbreviation',all=T) %>%
+  data.table()
+
+fwrite(count.wide,'./Final_outputs/combined_files/Full_counts_wide.tsv',sep='\t')
+fwrite(count.long,'./Final_outputs/combined_files/Full_counts_long.tsv',sep='\t')
+
+
 
 
 ################# Benchmarking against known datasets 
-merged.benchmark=select(full.counts,Species_name,ABC_total) %>% merge(benchmark.raw,by='Species_name') %>% rename(ABC_This_Study=ABC_total)
+merged.benchmark=select(count.long,Species_name,ABC_total) %>% merge(benchmark.raw,by='Species_name') %>% rename(ABC_This_Study=ABC_total)
 merged.benchmark$Difference=merged.benchmark$ABC_This_Study-merged.benchmark$Lit_ABC_count
 merged.benchmark$Percent_Difference=(merged.benchmark$Difference/merged.benchmark$ABC_This_Study)*100
 
@@ -67,17 +97,17 @@ ggsave(plot=gp,filename='./Final_outputs/Figures_Tables/Benchmark_graph.pdf')
 
 
 ###################### Perform ANOVA on groups and looks at plots
-iter.i=select(full.counts,ABCA:ABCH) %>% colnames()
-iter.j=iter.j=select(full.counts,Taxonomic_Classification:Vory) %>% colnames()
+iter.i=select(count.long,ABCA:ABCH) %>% colnames()
+iter.j=iter.j=select(count.long,Taxonomic_Classification:Vory) %>% colnames()
 
 anova.l=list()
 for(i in iter.i){
   for(j in iter.j){
     
     #### Filter Data for those groups which have over 5 individuals
-    good=names(table(full.counts[[j]]))[table(full.counts[[j]])>5]
+    good=names(table(count.long[[j]]))[table(count.long[[j]])>5]
     #good=c('Arachnida','Coleoptera','Diptera','Hemiptera','Hymenoptera','Lepidoptera')
-    sub=full.counts[full.counts[[j]] %in% good]
+    sub=count.long[count.long[[j]] %in% good]
     
     ### Make ggplot
     gp=ggplot(data=sub,aes_string(x=j,y=i,fill=j))
@@ -91,7 +121,7 @@ for(i in iter.i){
                 legend.position = 'none',plot.title = element_text(hjust = 0.5))
     
     #print(gp)
-    ggsave(filename=paste0('./Final_outputs/Figures_Tables/ABC_plots/',i,'_',j,'.png'),gp,device='png',height=7,width=7)
+    ggsave(filename=paste0('./Final_outputs/Figures_Tables/ANOVA_plots/',i,'_',j,'.png'),gp,device='png',height=7,width=7)
     
     ##### ANOVA
     model=aov(formula=sub[[i]]~sub[[j]])
@@ -115,7 +145,7 @@ fwrite(anova.filter,'./Final_outputs/Figures_Tables/ANOVA_table.csv')
 
 
 #### Make count variation graph
-count.plot=select(full.counts,abbreviation,Taxonomic_Classification,ABCA:ABCH) %>%
+count.plot=select(count.long,abbreviation,Taxonomic_Classification,ABCA:ABCH) %>%
   filter(Taxonomic_Classification %in% c('Arachnida','Coleoptera',
                                          'Diptera','Hemiptera','Hymenoptera','Lepidoptera')) %>% 
   data.table() %>%
@@ -159,7 +189,7 @@ ggsave(plot=gp,filename='./Final_outputs/Figures_Tables/Family_Size_Dotplot.pdf'
 #### Produce heatmap 
 
 #counts.summary$SLC_62=NULL
-m=full.counts %>% filter(abbreviation!='CaeEle') %>% data.table()
+m=count.long %>% filter(abbreviation!='CaeEle') %>% data.table()
 
 
 groups=c('Hymenoptera','Coleoptera','Hemiptera','Lepidoptera','Diptera','Arachnida','Crustacea')
@@ -188,7 +218,7 @@ dev.off()
 #################### Histogram
 
 ## Figure 3
-gp=ggplot(full.counts,aes(x=ABC_total))
+gp=ggplot(count.long,aes(x=ABC_total))
 gp=gp+geom_histogram(colour="black", fill="grey75",binwidth=5)
 gp=gp+geom_density(alpha=.2, fill="#FF6666")
 gp=gp+labs(x='\nTotal ABCs Identified in Species',y='Frequency\n')

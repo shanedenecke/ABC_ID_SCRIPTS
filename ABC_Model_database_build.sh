@@ -35,4 +35,4 @@ mv ./Db_build_temp/*.hmm ./model_database/HMM_databases/
 mv ./Db_build_temp/combined_marked_proteome.fa* ./model_database/marked_proteome/
 mv ./Db_build_temp/*NBD* ./model_database/model_NBDs/
 mv ./Db_build_temp/Only_ABCs.faa ./model_database/Model_organism_ABCs.faa
-mv ./Db_build_temp ./intermediate
+mv ./Db_build_temp ./model_database/

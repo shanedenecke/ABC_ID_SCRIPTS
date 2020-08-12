@@ -1,12 +1,19 @@
 #!/usr/bin/env bash
-H=/mnt/disk/shane/Transporter_ID/ABC_id
-PHYLO=$H/ABC_REF/Input_files/Phylo_list.txt
-SPEC=$H/ABC_REF/Input_files/target_species.tsv
-QUAL_THRESH=.3
-THREADS=10
 
+### 1) Set environemntal variables for pipeline
+H=/mnt/disk/shane/Transporter_ID/Arthropod_ABC_pipeline
+SPEC=$H/GENERAL_REFERENCE/keys/Arthropod_species_metadata.tsv
+BUSCO_THRESH=75
+THREADS=8
+
+### 2) Set Home working Directory
 cd $H 
 
-cd CAFE
 
-~/Applications/Custom_Applications/Species_phylogeny.sh -threads 10 -taxid_codes ../ABC_REF/CAFE/Lepidoptera_species.txt -ortho_algo Orthofinder -outgroups "ApiMel" -threads $THREADS
+
+###### 4) Search proteomes
+mkdir -p ABC_search
+for i in ./proteomes/*; do
+ ./ABC_ID_SCRIPTS/ABC_search.sh -target $i -hmm_profile ./model_database/HMM_databases/Only_ABCs.hmm -outdir ABC_search -threads $THREADS
+done
+

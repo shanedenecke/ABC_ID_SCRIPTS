@@ -26,6 +26,13 @@ echo 'Finihsed with all species. Begginning to parse outputs'
 ~/Applications/Custom_Applications/BUSCO_parse.py -dir $H/BUSCO/clean_summary/ > $H/BUSCO/BUSCO_final_summary_unfiltered.tsv
 
 ls $H/BUSCO/ | grep -E '^[[:alpha:]]{6}$' | while read i; do mv $H/BUSCO/$i* $H/BUSCO/junk/;done ### move all BUSCO junk to junk folder
-#cat $H/BUSCO/BUSCO_final_summary.tsv | cut -f 6 | tail -n +2 | while read i; do cp $PROTEOMES/"$i"* $H/filtered_proteomes/; done ### copy all good proteomes to final folder
-  
+
+mkdir $H/proteomes/temp
+mkdir $H/proteomes/low_busco_proteomes
+cat $H/BUSCO/BUSCO_final_summary.tsv | cut -f 6 | tail -n +2 | while read i; do mv $H/proteomes/"$i"* $H/proteomes/temp; done ### copy all good proteomes to final folder
+
+mv $H/proteomes/*.faa $H/proteomes/low_busco_proteoms/
+mv $H/proteomes/temp/* $H/proteomes/
+rm -r $H/proteomes/temp
+
 cd $H
