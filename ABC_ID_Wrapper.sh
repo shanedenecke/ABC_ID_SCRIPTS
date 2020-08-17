@@ -30,25 +30,24 @@ done
 ###### 5)Filter based on number of NBDs
 Rscript ./ABC_ID_SCRIPTS/ABC_post_process.R
 
-###### 5) CAFE
+###### 6) CAFE
 mkdir CAFE
 mkdir ./CAFE/clean_raxml_trees
 
 #source ./ABC_ID_SCRIPTS/ABC_species_phylogeny.sh
 cp ./GENERAL_REFERENCE/CAFE/ultrametric_tree_backup/*.nwk ./CAFE/clean_raxml_trees/
 
-#Rscript ./ABC_ID_SCRIPTS/ABC_CAFE_prep.R  
-#source ./ABC_ID_SCRIPTS/ABC_CAFE_run_full.sh
-#Rscript ./ABC_ID_SCRIPTS/ABC_CAFE_figures.R
+Rscript ./ABC_ID_SCRIPTS/ABC_CAFE_prep.R  
+source ./ABC_ID_SCRIPTS/ABC_CAFE5_run_full.sh
+Rscript ./ABC_ID_SCRIPTS/ABC_CAFE5_figures.R
   
-###### 6) Produce Figures and Tables
-#Rscript ./ABC_ID_SCRIPTS/ABC_post_process.R
+
   
 
 ### 7) Make phylogeny for relevant species 
 
 #source ./ABC_ID_SCRIPTS/ABC_phylo.sh
 #Rscript ~/Applications/Custom_Applications/ggtree_clean_phylogeny.R #### NEED TO GET ALL TREES IN ONE FOLDER
-#cp ./GENERAL_REFERENCE/phylo_premade/* ./phylo/clean_trees/
+#cp ./GENERAL_REFERENCE/phylo_premade/* ./phylo/clean_trees/  
 
 

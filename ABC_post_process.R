@@ -63,11 +63,21 @@ count.wide=count.raw %>% dcast(fam~abbreviation)
 count.long=count.raw %>% dcast(abbreviation~fam) %>% rowwise() %>%
   #mutate(ABC_total=ABCA+ABCBF+ABCH+ABCC+ABCD+ABCE+ABCF+ABCG+ABCH+ABC_Unsorted) %>% 
   mutate(ABC_total=sum(ABCA,ABCBF,ABCH,ABCC,ABCD,ABCE,ABCF,ABCG,ABCH,ABC_Unsorted,na.rm = T)) %>% 
-  merge(meta,by='abbreviation',all=T) %>%
+  merge(meta,by='abbreviation',all=T) %>% 
+  merge(busco.filtered,by='abbreviation') %>% 
   data.table()
+
+count.long.unfiltered=count.raw %>% dcast(abbreviation~fam) %>% rowwise() %>%
+  #mutate(ABC_total=ABCA+ABCBF+ABCH+ABCC+ABCD+ABCE+ABCF+ABCG+ABCH+ABC_Unsorted) %>% 
+  mutate(ABC_total=sum(ABCA,ABCBF,ABCH,ABCC,ABCD,ABCE,ABCF,ABCG,ABCH,ABC_Unsorted,na.rm = T)) %>% 
+  merge(meta,by='abbreviation',all=T) %>% 
+  merge(busco.unfiltered,by='abbreviation') %>% 
+  data.table()
+
 
 fwrite(count.wide,'./Final_outputs/combined_files/Full_counts_wide.tsv',sep='\t')
 fwrite(count.long,'./Final_outputs/combined_files/Full_counts_long.tsv',sep='\t')
+fwrite(count.long.unfiltered,'./Final_outputs/combined_files/Full_counts_BUSCO_unfiltered_long.tsv',sep='\t')
 
 
 
