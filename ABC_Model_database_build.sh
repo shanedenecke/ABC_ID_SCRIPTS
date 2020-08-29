@@ -21,7 +21,9 @@ grep -A 1 -E "__ABC[A-Z]+" ./Db_build_temp/combined_marked_proteome.faa | sed '/
 hmmsearch --domtblout ./Db_build_temp/PF0005_HMM_output.tsv ./GENERAL_REFERENCE/Model_ABC_sets/ABC_tran.hmm ./Db_build_temp/Only_ABCs.faa > ./Db_build_temp/hmm_junk.txt
 ~/Applications/Custom_Applications/hmmsearch_pfam_domain_parse.py -fasta ./Db_build_temp/Only_ABCs.faa -table ./Db_build_temp/PF0005_HMM_output.tsv > ./Db_build_temp/Only_ABCs_NBD.faa
 
-mafft-linsi --thread $THREADS ./Db_build_temp/Only_ABCs.faa > ./Db_build_temp/Only_ABCs.aln
+#mafft-linsi --thread $THREADS ./Db_build_temp/Only_ABCs.faa > ./Db_build_temp/Only_ABCs.aln
+mafft --thread $THREADS ./Db_build_temp/Only_ABCs.faa > ./Db_build_temp/Only_ABCs.aln
+
 ~/Applications/trimal/source/trimal -automated1 -in ./Db_build_temp/Only_ABCs.aln -out ./Db_build_temp/Only_ABCs.trimmed
 hmmbuild ./Db_build_temp/Only_ABCs.hmm ./Db_build_temp/Only_ABCs.trimmed
 

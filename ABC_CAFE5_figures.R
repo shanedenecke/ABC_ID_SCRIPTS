@@ -11,12 +11,16 @@ shhh(library(treeio))
 setwd('/mnt/disk/shane/Transporter_ID/Arthropod_ABC_pipeline/')
 dir.create('./CAFE/CAFE_figures')
 
+used.species=fread('./Final_outputs/combined_files/Full_counts_long.tsv')$abbreviation
+
+
 iter=list.files('./CAFE/CAFE_tables/') %>% gsub('_ABC_CAFE_table.tsv','',.)
 full.metadata=fread('./Final_outputs/combined_files/Full_counts_long.tsv')
-#group='Hemiptera_species'
-#family='ABCA'
-#node.annot=''
-#label.annot=''
+group='ArachnidRAXML8_taxid_codes'
+family='ABCH'
+node.annot=''
+label.annot=''
+nodes=F
 
 short.spec=function(x){
   gen=substr(unlist(str_split(x,'_'))[1],1,1)
@@ -33,14 +37,17 @@ xma.calc=function(tree){
 }
 
 ### tree.fig function                 
-tree.fig=function(group,family,node.annot='',label.annot=''){
+tree.fig=function(group,family,node.annot='',label.annot='',nodes=F){
   
   ##import ultrametric tree
   ultra.tree=read.tree(paste0('./CAFE/clean_raxml_trees/',group,'_tree_ultrametric.nwk'))
   tbl=as_tibble(ultra.tree) %>% data.table()
   
   #### set colors
-  node.tree=read.tree(paste0('./CAFE/clean_raxml_trees/RAxML_bipartitions.',group,'_subset.nwk'))
+  node.tree=read.tree(paste0('./CAFE/clean_raxml_trees/',group,'.nwk.raxml.support'))
+  drops=node.tree$tip.label[!(node.tree$tip.label %in% used.species)]
+  node.tree=drop.tip(node.tree,drops)
+
   node.scores=as.numeric(node.tree$node.label)
   cols=c()
   for(j in node.scores){
@@ -50,12 +57,17 @@ tree.fig=function(group,family,node.annot='',label.annot=''){
     }else{cols=c(cols,'red')}
   }
   
+  #if(length(drops)==0){
+  cols=c('grey50',cols)
+  #}
+  
   
   ### Import node labels
   lab.text=readLines(paste0('./CAFE/outputs/',group,'/','Base_asr.tre'))[3] %>% 
     gsub("^.+ = ",'',.) %>% gsub('>_[0-9|\\:|\\.]+','>',.) %>%
-    gsub(';','',.)
-  #lab.text=gsub('# The labeled CAFE tree:\t','',readLines(paste0('./CAFE/outputs/',group,'_SLC_summary.txt_fams.txt'))[1])
+    gsub(';','',.) 
+  lab.text=gsub('\\*_[0-9]+','',lab.text)
+
   lab.tree=read.tree(text=paste0('(',lab.text,')',';'))
     
   ## import counts
@@ -77,7 +89,10 @@ tree.fig=function(group,family,node.annot='',label.annot=''){
   }
   final=c('',as.character(sorted))
   final2=final[-1]
+  
+  
   ultra.tree$node.label=final2
+  if(nodes==T){ultra.tree$node.label=lab.tree$node.label[-1]} ## whether to create tree with node labels instead of CAFE counts
   
   ## add tip labels to ultrametric with numbers
   for(i in ultra.tree$tip.label){
@@ -87,13 +102,6 @@ tree.fig=function(group,family,node.annot='',label.annot=''){
   }
   
   ##Set scaling factors
-  #ma=max(sapply(1:ultra.tree$Nnode,function(x) tbl[node %in% ancestor(ultra.tree,x)]$branch.length %>% sum(na.rm = T)))
-  #xma=ma*1.4
-  #ma.r=seq(0,round(ma,-2),by=50)
-  #diff=ma-round(ma,-2)
-  
-  #ma=max(ultra.tree$edge.length)
-  #if(grepl('ArachIn',group)){ma=(254.90342+254.90367+45.39890)}
   ma=xma.calc(ultra.tree)
   xma=ma*1.5
   ma.r=seq(0,round(ma,-2),by=100)
@@ -104,10 +112,18 @@ tree.fig=function(group,family,node.annot='',label.annot=''){
   #### Make plot
   
   gp=ggtree(ultra.tree,size=2)
+  
+  if(grepl('Diptera',group)){
+  gp=gp+geom_tiplab(size=6,fontface='bold')#,aes(label=paste0('bold(', label, ')')), parse=TRUE)
+  gp=gp+geom_nodepoint(size=10,color=cols)
+  gp=gp+geom_nodelab(hjust=.6,size=4,fontface='bold',color='white')
+  
+  }else{
+ 
   gp=gp+geom_tiplab(size=12,fontface='bold')#,aes(label=paste0('bold(', label, ')')), parse=TRUE)
   gp=gp+geom_nodepoint(size=21,color=cols)
   gp=gp+geom_nodelab(hjust=.6,size=12,fontface='bold',color='white')
-  
+  }
   if(is.list(node.annot)){
     names(node.annot)=label.annot
     plot.annot=vector("list",length=length(label.annot))
@@ -128,7 +144,7 @@ tree.fig=function(group,family,node.annot='',label.annot=''){
   #print(gp)
 }
 
-a=tree.fig(group='Hemiptera_species',family='ABCA')
+a=tree.fig(group='Coleoptera_taxid_codes',family='ABCA')
 fams=colnames(full.metadata)[grepl('ABC',colnames(full.metadata))]
 fams=fams[fams!='SLC_14' & fams!='ABC_Unsorted' & fams!='ABC_total']
 
@@ -142,5 +158,5 @@ for (i in iter){
       temp=tree.fig(group = i,family = j)
       ggsave(plot=temp,filename=paste0('./CAFE/CAFE_figures/',i,'_',j,'.pdf'),device='pdf',width=16,height=12)
     }
-  }
-}
+  } 
+} 

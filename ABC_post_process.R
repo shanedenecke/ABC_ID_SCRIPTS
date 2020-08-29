@@ -41,8 +41,8 @@ busco.filtered=fread('./BUSCO/BUSCO_final_summary.tsv') %>% rename(abbreviation=
 ######################## NEED TO ADD MODEL DATA AT THIS STEP
 for (i in list.files('./ABC_search',full.names = T)){
   base=basename(i)
-  file.copy(paste0(i,'/','Final_ABCs.faa'),paste0('./Final_outputs/ABC_proteomes/',base,'_Final_ABC_proteins.faa'))
-  file.copy(paste0(i,'/','Final_ABC_table.tsv'),paste0('./Final_outputs/ABC_dicts/',base,'_Final_ABC_table.tsv'))
+  file.copy(paste0(i,'/','Final_ABCs.faa'),paste0('./Final_outputs/ABC_proteomes/',base,'_Final_ABC_proteins.faa'),overwrite = T)
+  file.copy(paste0(i,'/','Final_ABC_table.tsv'),paste0('./Final_outputs/ABC_dicts/',base,'_Final_ABC_table.tsv'),overwrite = T)
 }
 system('cp ./GENERAL_REFERENCE/Model_ABC_sets/ABC_proteins/*.faa ./Final_outputs/ABC_proteomes/')
 system('cp ./GENERAL_REFERENCE/Model_ABC_sets/ABC_final_tables/*.tsv ./Final_outputs/ABC_dicts/')
@@ -54,30 +54,25 @@ system('cp ./GENERAL_REFERENCE/Model_ABC_sets/ABC_final_tables/*.tsv ./Final_out
 system('cat ./Final_outputs/ABC_proteomes/* > ./Final_outputs/combined_files/All_ABCs.faa')
 all.tables=lapply(as.list(list.files('./Final_outputs/ABC_dicts/',full.names = T)),fread)
 final.table=rbindlist(all.tables,fill=T)
+final.table=final.table[fam!='ABC_Unsorted']
 fwrite(final.table,'./Final_outputs/combined_files/Final_full_dictionary.tsv',sep='\t')
 
 
 #### Make counts tables 
 count.raw=final.table %>% group_by(fam,abbreviation) %>% summarize(count=n()) %>% data.table() 
-count.wide=count.raw %>% dcast(fam~abbreviation)
-count.long=count.raw %>% dcast(abbreviation~fam) %>% rowwise() %>%
+count.wide=count.raw %>% dcast(fam~abbreviation,value.var='count')
+count.long=count.raw %>% dcast(abbreviation~fam,value.var='count') 
+sums=select(count.long,-abbreviation) %>% rowSums(na.rm=T)
+count.long=count.long %>% 
   #mutate(ABC_total=ABCA+ABCBF+ABCH+ABCC+ABCD+ABCE+ABCF+ABCG+ABCH+ABC_Unsorted) %>% 
-  mutate(ABC_total=sum(ABCA,ABCBF,ABCH,ABCC,ABCD,ABCE,ABCF,ABCG,ABCH,ABC_Unsorted,na.rm = T)) %>% 
+  #mutate(ABC_total=sum(ABCA,ABCBF,ABCH,ABCC,ABCD,ABCE,ABCF,ABCG,ABCH,ABC_Unsorted,na.rm = T)) %>% 
+  mutate(ABC_total=sums) %>%
   merge(meta,by='abbreviation',all=T) %>% 
   merge(busco.filtered,by='abbreviation') %>% 
   data.table()
 
-count.long.unfiltered=count.raw %>% dcast(abbreviation~fam) %>% rowwise() %>%
-  #mutate(ABC_total=ABCA+ABCBF+ABCH+ABCC+ABCD+ABCE+ABCF+ABCG+ABCH+ABC_Unsorted) %>% 
-  mutate(ABC_total=sum(ABCA,ABCBF,ABCH,ABCC,ABCD,ABCE,ABCF,ABCG,ABCH,ABC_Unsorted,na.rm = T)) %>% 
-  merge(meta,by='abbreviation',all=T) %>% 
-  merge(busco.unfiltered,by='abbreviation') %>% 
-  data.table()
-
-
 fwrite(count.wide,'./Final_outputs/combined_files/Full_counts_wide.tsv',sep='\t')
 fwrite(count.long,'./Final_outputs/combined_files/Full_counts_long.tsv',sep='\t')
-fwrite(count.long.unfiltered,'./Final_outputs/combined_files/Full_counts_BUSCO_unfiltered_long.tsv',sep='\t')
 
 
 
@@ -91,8 +86,10 @@ merged.benchmark$Percent_Difference=(merged.benchmark$Difference/merged.benchmar
 gp=ggplot(merged.benchmark,aes(x=Species_name,y=Percent_Difference))
 gp=gp+geom_bar(stat='identity')
 gp=gp+geom_hline(yintercept=0,linetype=1,size=2,color='red')
-gp=gp+scale_y_continuous(breaks=seq(-50,50,by=10),limits=c(-50,50))
+gp=gp+scale_y_continuous(breaks=seq(-50,50,by=10),limits=c(-40,40))
 gp=gp+labs(x='\nSpecies Name',y='Percent Difference\n') 
+gp=gp+geom_hline(yintercept=10,linetype='dashed')
+gp=gp+geom_hline(yintercept=-10,linetype='dashed')
 gp=gp+theme_bw()
 gp=gp+theme(text=element_text(face="bold",family="serif"),panel.grid=element_blank(),
             axis.ticks.x=element_line(),panel.border=element_rect(colour="black",fill=NA),
@@ -101,15 +98,15 @@ gp=gp+theme(text=element_text(face="bold",family="serif"),panel.grid=element_bla
             legend.position = 'none',plot.title = element_text(hjust = 0.5),
             plot.margin=margin(t = 0, r = 2, b = 0, l = 2, unit = "cm"))
 
-print(gp)
-ggsave(plot=gp,filename='./Final_outputs/Figures_Tables/Benchmark_graph.pdf')
+#print(gp)
+ggsave(plot=gp,filename='./Final_outputs/Figures_Tables/Benchmark_graph.pdf',width=20,height=10)
 
 
 
 ###################### Perform ANOVA on groups and looks at plots
 iter.i=select(count.long,ABCA:ABCH) %>% colnames()
-iter.j=iter.j=select(count.long,Taxonomic_Classification:Vory) %>% colnames()
-
+#iter.j=iter.j=select(count.long,Taxonomic_Classification:Vory) %>% select(-Source) %>% colnames()
+iter.j='Taxonomic_Classification'
 anova.l=list()
 for(i in iter.i){
   for(j in iter.j){
@@ -144,6 +141,7 @@ for(i in iter.i){
     tuk$comparison=comp
     
     anova.l[[paste(i,j,sep='_')]]=data.table(tuk,family=i,co_variable=j) 
+    #anova.l[[paste(i,j,sep='_')]]=data.table(pval=pval,family=i,co_variable=j) 
   }
 }
 
@@ -159,12 +157,12 @@ count.plot=select(count.long,abbreviation,Taxonomic_Classification,ABCA:ABCH) %>
   filter(Taxonomic_Classification %in% c('Arachnida','Coleoptera',
                                          'Diptera','Hemiptera','Hymenoptera','Lepidoptera')) %>% 
   data.table() %>%
-  #group_by(Taxonomic_Classification) %>%
+  #group_by(Taxonomic_Classification) %>% 
   #filter(n()>5) %>% data.table() %>% 
   ### select for relevant columsn
   melt(id.vars=c('abbreviation','Taxonomic_Classification'),measure.vars=patterns("ABC"), ###Melt data frame to have family and size be measurements
        variable.name='ABC_Family',value.name='Family_Size') %>%  ### remove taxonomic groups with fewer than 30 total events (fam x species). Generally under 5 species
-  filter(ABC_Family %in% c('ABCA','ABCBF','ABCC','ABCH')) %>% ### only variable families
+  filter(ABC_Family %in% c('ABCA','ABCBF','ABCG','ABCH')) %>% ### only variable families
   data.table()
 
 
@@ -186,7 +184,7 @@ gp=gp+theme(text=element_text(face="bold",family="serif"),panel.grid=element_bla
             legend.position = 'none',
             plot.title = element_text(hjust = 0.5))
 
-print(gp)
+#print(gp)
 ggsave(plot=gp,filename='./Final_outputs/Figures_Tables/Family_Size_Dotplot.pdf',width=12,height=8)
 
 
@@ -199,23 +197,20 @@ ggsave(plot=gp,filename='./Final_outputs/Figures_Tables/Family_Size_Dotplot.pdf'
 #### Produce heatmap 
 
 #counts.summary$SLC_62=NULL
-m=count.long %>% filter(abbreviation!='CaeEle') %>% data.table()
-
-
 groups=c('Hymenoptera','Coleoptera','Hemiptera','Lepidoptera','Diptera','Arachnida','Crustacea')
 cols=c('firebrick2','blue4','magenta','green3','orange','mediumorchid3','gold3')
 
 names(groups)=cols
 final.cols=c()
-for(i in 1:nrow(m)){
-  g=m$Taxonomic_Classification[i]
+for(i in 1:nrow(count.long)){
+  g=count.long$Taxonomic_Classification[i]
   if(g %in% groups){final.cols[i]=names(groups[which(groups==g)])}else{final.cols[i]='black'}
 }
 
-counts.matrix=m %>% 
+counts.matrix=count.long %>% 
   select(matches("ABC"),-ABC_total) %>%
   as.matrix() %>% t()
-colnames(counts.matrix)=m$Species_name
+colnames(counts.matrix)=count.long$Species_name
 
 pdf('./Final_outputs/Figures_Tables/ABC_heatmap.pdf',width=20,height=10)
 hm=heatmap.2(counts.matrix,Rowv=F,Colv=T,scale="row",col=colorpanel(75,'blue','grey','red'),

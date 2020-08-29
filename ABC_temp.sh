@@ -3,17 +3,12 @@
 ### 1) Set environemntal variables for pipeline
 H=/mnt/disk/shane/Transporter_ID/Arthropod_ABC_pipeline
 SPEC=$H/GENERAL_REFERENCE/keys/Arthropod_species_metadata.tsv
-BUSCO_THRESH=75
-THREADS=8
-
-### 2) Set Home working Directory
+BUSCO_THRESH=80
+THREADS=4
 cd $H 
 
 
-
 ###### 4) Search proteomes
-mkdir -p ABC_search
-for i in ./proteomes/*; do
- ./ABC_ID_SCRIPTS/ABC_search.sh -target $i -hmm_profile ./model_database/HMM_databases/Only_ABCs.hmm -outdir ABC_search -threads $THREADS
+for i in ./proteomes/*.faa; do
+ ./ABC_ID_SCRIPTS/ABC_search/ABC_search.sh -proteome $i -outdir ./ABC_search -threads $THREADS -minlen 250
 done
-

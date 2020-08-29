@@ -91,6 +91,7 @@ for (i in iter){
     }else if(j>50){cols=c(cols,'blue4')
     }else{cols=c(cols,'red')}
   }
+  #plot.tree$node
   
   ma=max(mytimetree$edge.length)*2
   xma=ma+100

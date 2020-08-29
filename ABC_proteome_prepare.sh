@@ -45,7 +45,7 @@ echo 'Numberof GOOD proteomes is ' $(ls ./proteome_clean/clean_fasta/* | grep -E
 
 mv ./proteome_clean/clean_fasta/*_unigene.faa ./proteomes/
 cat ./proteome_clean/target_species.tsv | cut -f 2 | while read i;do
- cp ./GENERAL_REFERENCE/non_model_proteomes/non_orthoDB_fasta/$i*.faa ./proteomes/
+cp ./GENERAL_REFERENCE/non_model_proteomes/non_orthoDB_fasta/$i*.faa ./proteomes/
 done
 
 rm -rf ./proteome_clean/

@@ -24,6 +24,7 @@ echo 'Finihsed with all species. Begginning to parse outputs'
 ## parse BUSCO outputs
 ~/Applications/Custom_Applications/BUSCO_parse.py -dir ./clean_summary/ -thresh $BUSCO_THRESH > $H/BUSCO/BUSCO_final_summary.tsv
 ~/Applications/Custom_Applications/BUSCO_parse.py -dir $H/BUSCO/clean_summary/ > $H/BUSCO/BUSCO_final_summary_unfiltered.tsv
+if grep -q 'TetUrt' $H/BUSCO/BUSCO_final_summary.tsv; then echo "Tetranychus already present"; else grep 'TetUrt' $H/BUSCO/BUSCO_final_summary_unfiltered.tsv >> $H/BUSCO/BUSCO_final_summary.tsv; fi
 
 ls $H/BUSCO/ | grep -E '^[[:alpha:]]{6}$' | while read i; do mv $H/BUSCO/$i* $H/BUSCO/junk/;done ### move all BUSCO junk to junk folder
 
