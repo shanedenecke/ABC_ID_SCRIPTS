@@ -1,12 +1,9 @@
 #!/usr/bin/env Rscript
 shhh <- suppressPackageStartupMessages
-shhh(library(dplyr))
+shhh(library(tidyverse))
 shhh(library(data.table))
-shhh(library(stringr))
 shhh(library(ape))
 shhh(library(ggtree))
-shhh(library(tidyr))
-shhh(library(ggplot2))
 shhh(library(treeio))
 setwd('/mnt/disk/shane/Transporter_ID/Arthropod_ABC_pipeline/')
 dir.create('./CAFE/CAFE_figures')

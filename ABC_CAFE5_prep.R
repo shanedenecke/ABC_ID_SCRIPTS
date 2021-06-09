@@ -1,13 +1,9 @@
 #!/usr/bin/env Rscript
 shhh <- suppressPackageStartupMessages
-shhh(library(dplyr))
+shhh(library(tidyverse))
 shhh(library(data.table))
-shhh(library(stringr))
 shhh(library(ape))
 shhh(library(ggtree))
-shhh(library(tidyr))
-shhh(library(ggplot2))
-
 #### FILTER OUT QUALITY ON LINE 61
 
 setwd('/mnt/disk/shane/Transporter_ID/Arthropod_ABC_pipeline')
