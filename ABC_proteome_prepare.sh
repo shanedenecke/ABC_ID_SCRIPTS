@@ -49,3 +49,5 @@ cp ./GENERAL_REFERENCE/non_model_proteomes/non_orthoDB_fasta/$i*.faa ./proteomes
 done
 
 rm -rf ./proteome_clean/
+
+for i in ./proteomes/*; do fasta_clean.sh -proteome $i; done

@@ -16,7 +16,8 @@ used.species=fread('./Final_outputs/combined_files/Full_counts_long.tsv')$abbrev
 
 iter=list.files('./CAFE/CAFE_tables/') %>% gsub('_ABC_CAFE_table.tsv','',.)
 full.metadata=fread('./Final_outputs/combined_files/Full_counts_long.tsv')
-group='ArachnidRAXML8_taxid_codes'
+#group='Coleoptera_taxid_codes'
+group='Lepidoptera'
 family='ABCH'
 node.annot=''
 label.annot=''
@@ -44,7 +45,7 @@ tree.fig=function(group,family,node.annot='',label.annot='',nodes=F){
   tbl=as_tibble(ultra.tree) %>% data.table()
   
   #### set colors
-  node.tree=read.tree(paste0('./CAFE/clean_raxml_trees/',group,'.nwk.raxml.support'))
+  node.tree=read.tree(paste0('./CAFE/clean_raxml_trees/Clean_',group,'_species_tree.nwk'))
   drops=node.tree$tip.label[!(node.tree$tip.label %in% used.species)]
   node.tree=drop.tip(node.tree,drops)
 
@@ -57,9 +58,12 @@ tree.fig=function(group,family,node.annot='',label.annot='',nodes=F){
     }else{cols=c(cols,'red')}
   }
   
-  #if(length(drops)==0){
-  cols=c('grey50',cols)
-  #}
+  if(ultra.tree$Nnode>length(cols)){
+  	cols=c('grey50',cols)
+  }else if(ultra.tree$Nnode<length(cols)){
+  	cols=cols[2:length(cols)]
+  }
+  
   
   
   ### Import node labels
@@ -136,18 +140,20 @@ tree.fig=function(group,family,node.annot='',label.annot='',nodes=F){
     }
   }
   #gp=gp+geom_hilight(node=list(node1,55),fill='darkgreen',alpha=.3)
-  gp=gp+theme_tree2()
-  gp=gp+theme(axis.text.x=element_text(size=20,face='bold',color = 'black'),axis.line.x=element_line(size=3),
-              axis.title.x=element_text(size=20),
+  gp=gp+labs(x='Millions of Years Ago')
+  #gp=gp+theme_tree2()
+  gp=gp+theme(axis.text.x=element_text(size=30,face='bold',color = 'black'),axis.line.x=element_line(size=3),
+              axis.title.x=element_text(size=40,face='bold'),
               plot.margin=unit(c(t=0,r=2,b=0,l=0),"cm"))
   gp=gp+scale_x_continuous(breaks=diff+ma.r,labels=as.character(rev(ma.r)),limits=c(0,xma))
   #print(gp)
+  #ggsave('test.pdf',gp,width=16,height=9)
 }
 
-a=tree.fig(group='Coleoptera_taxid_codes',family='ABCA')
+a=tree.fig(group='Coleoptera',family='ABCA')
 fams=colnames(full.metadata)[grepl('ABC',colnames(full.metadata))]
 fams=fams[fams!='SLC_14' & fams!='ABC_Unsorted' & fams!='ABC_total']
-
+  
 
 #iter=iter[2]
 for (i in iter){ 
@@ -156,7 +162,7 @@ for (i in iter){
     res=try(tree.fig(group = i,family = j),silent=T)
     if(class(res)!='try-error'){
       temp=tree.fig(group = i,family = j)
-      ggsave(plot=temp,filename=paste0('./CAFE/CAFE_figures/',i,'_',j,'.pdf'),device='pdf',width=16,height=12)
+      ggsave(plot=temp,filename=paste0('./CAFE/CAFE_figures/',i,'_',j,'.pdf'),device='pdf',width=16,height=11)
     }
   } 
 } 

@@ -18,3 +18,10 @@ for i in ./taxid_lists/*.txt;do ~/Applications/Custom_Applications/Species_phylo
 #~/Applications/Custom_Applications/Species_phylogeny.sh -taxid_codes ./GENERAL_REFERENCE/CAFE/ArachInsect_species.txt -ortho_algo Orthofinder -outgroups "None" -threads 10
 
 #cp ./*/rax_output/RAxML_bipartitions.*.nwk ./clean_raxml_trees/
+
+
+#nohup ~/Applications/Custom_Applications/Species_phylogeny.sh -taxid ./CAFE/taxid_lists/Hemimetabola_taxid_codes.txt -threads $THREADS -outdir ./CAFE -maxseqs 500 &
+#nohup ~/Applications/Custom_Applications/Species_phylogeny.sh -taxid ./CAFE/taxid_lists/Coleoptera_taxid_codes.txt -threads $THREADS -outdir ./CAFE -maxseqs 500 &
+#nohup ~/Applications/Custom_Applications/Species_phylogeny.sh -taxid ./taxid_lists/Lepidoptera_taxid_codes.txt -threads $THREADS -maxseqs 500 &
+#nohup ~/Applications/Custom_Applications/Species_phylogeny.sh -taxid ./CAFE/taxid_lists/Arachnid_taxid_codes.txt -threads $THREADS -outdir ./CAFE -maxseqs 500 &
+

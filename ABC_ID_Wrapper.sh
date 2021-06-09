@@ -4,7 +4,7 @@
 H=/mnt/disk/shane/Transporter_ID/Arthropod_ABC_pipeline
 SPEC=$H/GENERAL_REFERENCE/keys/Arthropod_species_metadata.tsv
 BUSCO_THRESH=80
-THREADS=4
+THREADS=16
 cd $H 
 
 
@@ -21,36 +21,34 @@ source ./ABC_ID_SCRIPTS/ABC_BUSCO.sh
 
 ###### 4) Search proteomes
 for i in ./proteomes/*.faa; do
- ./ABC_ID_SCRIPTS/ABC_search/ABC_search.sh -proteome $i -outdir ./ABC_search -threads $THREADS -minlen 250
+ ~/Applications/ABC_scan/ABC_scan.sh -proteome $i -outdir ./ABC_search -threads $THREADS -minlen 250
 done
 
 ###### 5)Make figures and tables from counts
 Rscript ./ABC_ID_SCRIPTS/ABC_post_process.R
 
 ###### 6) CAFE
-mkdir CAFE
-mkdir ./CAFE/clean_raxml_trees
-mkdir ./CAFE/taxid_lists
+mkdir CAFE ./CAFE/clean_raxml_trees ./CAFE/taxid_lists ./CAFE/outputs
 
+### Prepare CAFE
 ./ABC_ID_SCRIPTS/Species_phylogeny_prep.py
-#for i in ./CAFE/taxid_lists/*.txt;do ~/Applications/Custom_Applications/Species_phylogeny.sh -taxid_codes $i -threads $THREADS -outdir ./CAFE -maxseqs 1000; done
-#nohup ~/Applications/Custom_Applications/Species_phylogeny.sh -taxid ./CAFE/taxid_lists/Hemimetabola_taxid_codes.txt -threads $THREADS -outdir ./CAFE -maxseqs 500 &
-#nohup ~/Applications/Custom_Applications/Species_phylogeny.sh -taxid ./CAFE/taxid_lists/Coleoptera_taxid_codes.txt -threads $THREADS -outdir ./CAFE -maxseqs 500 &
-#nohup ~/Applications/Custom_Applications/Species_phylogeny.sh -taxid ./taxid_lists/Lepidoptera_taxid_codes.txt -threads $THREADS -maxseqs 500 &
-#nohup ~/Applications/Custom_Applications/Species_phylogeny.sh -taxid ./CAFE/taxid_lists/Arachnid_taxid_codes.txt -threads $THREADS -outdir ./CAFE -maxseqs 500 &
+#for i in ./CAFE/taxid_lists/*.txt;do ~/Applications/Custom_Applications/Species_phylogeny.sh -taxid $i -threads $THREADS -outdir ./CAFE -maxseqs 1000; done
 cp ./GENERAL_REFERENCE/CAFE/ultrametric_tree_backup/*.support ./CAFE/clean_raxml_trees/
+Rscript ./ABC_ID_SCRIPTS/ABC_CAFE5_prep.R  
 
-#Rscript ./ABC_ID_SCRIPTS/ABC_CAFE_prep.R  
-#source ./ABC_ID_SCRIPTS/ABC_CAFE5_run_full.sh
-#Rscript ./ABC_ID_SCRIPTS/ABC_CAFE5_figures.R
+### Run CAFE
+for i in ./CAFE/CAFE_tables/*.tsv; do  
+b=$(echo $(basename $i) | sed 's/_ABC_CAFE_table.tsv//g')
+cafexp -i $i -o ./CAFE/outputs/$b -t ./CAFE/clean_raxml_trees/$b'_tree_ultrametric.nwk' 
+done 
+
+##Make CAFE figures
+Rscript ./ABC_ID_SCRIPTS/ABC_CAFE5_figures.R
   
 
   
 
 ### 7) Make phylogeny for relevant species 
-
-#source ./ABC_ID_SCRIPTS/ABC_phylo.sh
-#Rscript ~/Applications/Custom_Applications/ggtree_clean_phylogeny.R #### NEED TO GET ALL TREES IN ONE FOLDER
-#cp ./GENERAL_REFERENCE/phylo_premade/* ./phylo/clean_trees/  
+./ABC_ID_SCRIPTS/ABC_phylo.sh
 
 

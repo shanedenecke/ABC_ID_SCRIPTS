@@ -47,26 +47,36 @@ xma.calc=function(tree){
 }
   
 ### create list of tree base names
-iter=list.files('./CAFE/clean_raxml_trees')[grepl('raxml.support',list.files('./CAFE/clean_raxml_trees'))] %>%
-  str_remove('.nwk.raxml.support')
-#iter=iter[grep('species$',iter)]
+iter=list.files('./CAFE/clean_raxml_trees')[grepl('Raw.+nwk',list.files('./CAFE/clean_raxml_trees'))] %>%
+  str_remove('_species_tree.nwk') %>% str_remove('Raw_')
 
 ###### RUN LOOP
 for (i in iter){
   
-  tr1=read.tree(paste0('./CAFE/clean_raxml_trees/',i,'.nwk.raxml.support'))
+  tr1=read.tree(paste0('./CAFE/clean_raxml_trees/Raw_',i,'_species_tree.nwk'))
   drops=tr1$tip.label[!(tr1$tip.label %in% used.species)]
   if(grepl('Arachnid',i)){tr1=root(tr1,outgroup=c('SarSca','LepDel','TetUrt','SteMim','ParTep','CenScu','TroMer','VarAac','VarDes','GalOcc','IxoSca'))}
   if(grepl('Coleoptera',i)){tr1=root(tr1,outgroup=c('ApiMel'))}
-  if(grepl('Diptera',i)){tr1=root(tr1,outgroup=c('BomMor'))}
+  if(grepl('Diptera',i)){
+  tr1=root(tr1,outgroup=c('BomMor'))
+  drops=c(drops,'BomMor')
+  }
   if(grepl('Hemimetabola',i)){tr1=root(tr1,outgroup=c('DroMel','ApiMel','AedAeg','BomMor'))}
+  if(grepl('Lepidoptera',i)){
+  tr1=root(tr1,outgroup=c("ApiMel"))
+  #drops=c(drops,'MyzPer')
+  }
+  if(grepl('Hymenoptera',i)){
+    tr1=root(tr1,outgroup=c('AthRos','CepCin','NeoLec'))
+    #drops=c(drops,'MyzPer')
+  }
   
   
   
   tr=drop.tip(tr1,drops)
   
   
-  write.tree(tr,paste0('./CAFE/clean_raxml_trees/RAxML_bipartitions.',i,'_subset.nwk'))
+  write.tree(tr,paste0('./CAFE/clean_raxml_trees/Clean_',i,'_species_tree.nwk'))
   
   nodes <- c(); maxes=c()
   maxes=c()
@@ -81,6 +91,10 @@ for (i in iter){
   if(("DroMel" %in% tr$tip.label) & ("BomMor" %in% tr$tip.label)){nodes=c(nodes,getMRCA(tr, tip = c("DroMel","BomMor")));maxes=c(maxes,328);mins=c(mins,244)} ## has fossil
   if(("IxoSca" %in% tr$tip.label) & ("VarDes" %in% tr$tip.label)){nodes=c(nodes,getMRCA(tr, tip = c("IxoSca","VarDes")));maxes=c(maxes,384);mins=c(mins,282)} 
   if(("ParTep" %in% tr$tip.label) & ("CenScu" %in% tr$tip.label)){nodes=c(nodes,getMRCA(tr, tip = c("ParTep","CenScu")));maxes=c(maxes,419);mins=c(mins,354)} 
+  if(("BomTer" %in% tr$tip.label) & ("ApiMel" %in% tr$tip.label)){nodes=c(nodes,getMRCA(tr, tip = c("BomTer","ApiMel")));maxes=c(maxes,40);mins=c(mins,20)} 
+  if(("AcrEch" %in% tr$tip.label) & ("ApiMel" %in% tr$tip.label)){nodes=c(nodes,getMRCA(tr, tip = c("AcrEch","ApiMel")));maxes=c(maxes,110);mins=c(mins,90)} 
+  if(("OruAbi" %in% tr$tip.label) & ("ApiMel" %in% tr$tip.label)){nodes=c(nodes,getMRCA(tr, tip = c("OruAbi","ApiMel")));maxes=c(maxes,180);mins=c(mins,140)} 
+  if(("NeoLec" %in% tr$tip.label) & ("ApiMel" %in% tr$tip.label)){nodes=c(nodes,getMRCA(tr, tip = c("NeoLec","ApiMel")));maxes=c(maxes,260);mins=c(mins,240)} 
   
   
   
@@ -119,7 +133,7 @@ for (i in iter){
   gp=gp+theme_tree2()
   gp=gp+theme(axis.text.x=element_text(size=20,face='bold',color = 'black'))
   gp=gp+scale_x_continuous(breaks=diff+ma.r,labels=as.character(rev(ma.r)),limits=c(-50,xma))
-  print(gp)
+  #print(gp)
   #dev.off()
   
   ggsave(paste0("./CAFE/clean_raxml_trees/",i,'_tree_ultrametric.pdf'),plot=gp,width=14,height=10)
